@@ -302,5 +302,52 @@
     }
   };
 
+  // ── HIỆU ỨNG CLICK TỎA NGÔI SAO ──
+  document.addEventListener('click', function (e) {
+    // Danh sách các ký tự ngôi sao lấp lánh phong cách Sky
+    const starTypes = ['✦', '✧', '★', '✶', '﹡'];
+    // Số lượng ngôi sao tỏa ra mỗi lần click
+    const starCount = 6;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'click-star';
+
+      // Chọn ngẫu nhiên hình dáng ngôi sao
+      star.textContent = starTypes[Math.floor(Math.random() * starTypes.length)];
+
+      // Vị trí click của chuột
+      star.style.left = e.clientX + 'px';
+      star.style.top = e.clientY + 'px';
+
+      // Tính toán hướng bay ngẫu nhiên (tỏa ra vòng tròn xung quanh tâm click)
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 30 + Math.random() * 60; // Độ xa ngẫu nhiên
+      const x = Math.cos(angle) * velocity + 'px';
+      const y = Math.sin(angle) * velocity + 'px';
+      const rotate = (Math.random() * 360) + 'deg'; // Độ xoay ngẫu nhiên
+
+      // Truyền biến vào CSS
+      star.style.setProperty('--x', x);
+      star.style.setProperty('--y', y);
+      star.style.setProperty('--r', rotate);
+
+      // Kích thước ngẫu nhiên một chút cho tự nhiên
+      star.style.fontSize = (10 + Math.random() * 10) + 'px';
+
+      // Đổi màu sắc ngẫu nhiên nhẹ giữa vàng tinh tú và tím huyền bí của Fée Noire
+      const colors = ['#bb86fc', '#e6c2ff', '#ffe066', '#ffffff'];
+      star.style.color = colors[Math.floor(Math.random() * colors.length)];
+      star.style.textShadow = `0 0 8px ${star.style.color}`;
+
+      document.body.appendChild(star);
+
+      // Tự động xóa ngôi sao sau khi chạy xong hiệu ứng để tránh nặng web
+      setTimeout(() => {
+        star.remove();
+      }, 800);
+    }
+  });
+
   window.FeeNoireAuth.init();
 })();
