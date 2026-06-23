@@ -122,7 +122,7 @@
             font-family: 'Dancing Script', cursive;
             font-size: 1.25rem;
             letter-spacing: 2px;
-            margin-right:2px;
+            margin-right: 2px;
             color: rgba(187, 134, 252, 0.6);
             text-transform: uppercase;
             text-align: center;
@@ -191,7 +191,7 @@
         <div class="logo">Fée Noire</div>
         <nav class="nav-links d-flex align-items-center">
             <a href="index.html" class="active">Trang Chủ</a>
-             <!-- Dropdown Câu Chuyện -->
+            <!-- Dropdown Câu Chuyện -->
             <div class="nav-dropdown-wrapper">
                 <a href="#" class="nav-dropdown-trigger">
                     Câu Chuyện <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7rem;"></i>
@@ -386,13 +386,12 @@
             right: -52px;
         }
 
-        /* Text stage — chiều cao cố định, không nhảy khi đổi slide */
+        /* Text stage — chiều cao cố định được tính sau khi render, không nhảy layout */
         .fn-text-stage {
             position: relative;
-            overflow: hidden;
             margin-top: 32px;
-            height: 280px;
-            /* đủ chứa slide dài nhất */
+            /* height được set bằng JS sau khi đo panel dài nhất */
+            overflow: hidden;
         }
 
         .fn-text-panel {
@@ -400,27 +399,18 @@
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
             opacity: 0;
-            transform: translateY(18px);
-            transition: opacity 0.45s ease, transform 0.45s ease;
+            transition: opacity 0.5s ease;
             pointer-events: none;
             color: rgba(245, 246, 250, 0.85);
             font-size: 1.02rem;
-            line-height: 1.75;
-            padding: 0 10px;
-            overflow-y: auto;
-            /* Ẩn scrollbar nhưng vẫn cuộn được nếu cần */
-            scrollbar-width: none;
-        }
-
-        .fn-text-panel::-webkit-scrollbar {
-            display: none;
+            line-height: 1.85;
+            padding: 0 10px 24px;
+            /* KHÔNG dùng transform translateY — tránh nhảy vị trí */
         }
 
         .fn-text-panel.active {
             opacity: 1;
-            transform: translateY(0);
             pointer-events: all;
         }
 
@@ -442,18 +432,19 @@
 
     <script>
         // ── FN STORY CAROUSEL DATA ──
+        // ── FN STORY CAROUSEL DATA ──
         const FN_SLIDES = [
             {
                 img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80',
-                text: 'Dưới màn đêm vĩnh cửu của vương quốc Sky, những tâm hồn lữ khách tìm thấy nhau tại Fée Noire. Mỗi ngọn nến được thắp lên đều cất giấu một mảnh ký ức thiêng liêngCâu chuyện cổ tích đầy thơ mộng trong mỗi ký ức của chúng ta đều có nàng tiên với đôi cánh lấp lánh, hay bà tiên mang gương mặt hiền từ cùng câu niệm chú nhiệm màu. Chúng mang vẻ rực rỡ đầy màu sắc, tựa như những tia sáng đẹp đẽ nhất mà con người từng mơ tới..'
+                text: 'Câu chuyện cổ tích đầy thơ mộng trong mỗi ký ức của chúng ta đều có nàng tiên với đôi cánh lấp lánh, hay bà tiên mang gương mặt hiền từ cùng câu niệm chú nhiệm màu. Chúng mang vẻ rực rỡ đầy màu sắc, tựa như những tia sáng đẹp đẽ nhất mà con người từng mơ tới.<br><br>Thế nhưng, ánh sáng chưa bao giờ là thứ tồn tại mãi mãi. Dù có chói lọi đến đâu, nó vẫn sẽ bị thời gian bào mòn, bị hiện thực dập tắt, hoặc tan biến cùng những niềm tin đã lụi tàn.'
             },
             {
                 img: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80',
-                text: 'Thế nhưng, ánh sáng chưa bao giờ là thứ tồn tại mãi mãi. Dù có chói lọi đến đâu, nó vẫn sẽ bị thời gian bào mòn, bị hiện thực dập tắt, hoặc tan biến cùng những niềm tin đã lụi tàn. Nhưng ở những nơi ánh sáng không thể chạm tới, luôn tồn tại một thế giới khác. Một thế giới bị xem là cái nôi của tội lỗi, của dục vọng và những điều đen tối nhất. Nơi mà đa số mọi người đều tránh né, sợ hãi. Thế nhưng những ai thực sự hiểu về nó đều biết rằng, bóng tối không phân biệt thiện hay ác. Ở đó chỉ tồn tại duy nhất một quy tắc: "Mọi thứ đều có giá của nó"'
+                text: 'Nhưng ở những nơi ánh sáng không thể chạm tới, luôn tồn tại một thế giới khác.<br><br>Một thế giới bị xem là cái nôi của tội lỗi, của dục vọng và những điều đen tối nhất. Nơi mà đa số mọi người đều tránh né, sợ hãi. Thế nhưng những ai thực sự hiểu về nó đều biết rằng, bóng tối không phân biệt thiện hay ác.<br><br>Ở đó chỉ tồn tại duy nhất một quy tắc:<br>"Mọi thứ đều có giá của nó"'
             },
             {
                 img: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80',
-                text: 'Chỉ cần đưa ra một cái giá tương xứng, bạn sẽ trở thành vị khách được chào đón nhất. Điều bạn mong muốn, dù là quyền lực, tri thức, tài sản hay sinh mạng của một ai đó, đều sẽ được thực hiện một cách hoàn hảo. Và tại vùng đất Sky rực rỡ ấy, giữa những góc khuất mà ánh mặt trời không bao giờ soi tới, tồn tại một cửa tiệm nhỏ bé mang tên Fée Noire. Ẩn sau khu rừng rậm rạp ẩm ướt là nơi trú ngụ của vô số sinh vật thuộc về bóng tối. Một nơi hỗn loạn một cách trật tự, dù họ có là ai đi nữa, xấu xa như nào.Họ vẫn luôn tuân theo quy tắc duy nhất của cửa tiệm, chỉ cần đủ không hơn không thiếu. Một khi kế ước được thành lập, không thế lực nào có thể xóa bỏ. Chào mừng đến với Fee Noire. Nơi mọi điều ước đều có thể trở thành hiện thực... miễn là bạn đủ khả năng trả giá.'
+                text: 'Chỉ cần đưa ra một cái giá tương xứng, bạn sẽ trở thành vị khách được chào đón nhất. Điều bạn mong muốn, dù là quyền lực, tri thức, tài sản hay sinh mạng của một ai đó, đều sẽ được thực hiện một cách hoàn hảo.<br><br>Và tại vùng đất Sky rực rỡ ấy, giữa những góc khuất mà ánh mặt trời không bao giờ soi tới, tồn tại một cửa tiệm nhỏ bé mang tên Fée Noire.<br><br>Ẩn sau khu rừng rậm rạp ẩm ướt là nơi trú ngụ của vô số sinh vật thuộc về bóng tối. Một nơi hỗn loạn một cách trật tự, dù họ có là ai đi nữa, xấu xa như nào. Họ vẫn luôn tuân theo quy tắc duy nhất của cửa tiệm, chỉ cần đủ không hơn không thiếu.<br><br>Một khi kế ước được thành lập, không thế lực nào có thể xóa bỏ.<br><br>Chào mừng đến với Fee Noire.<br><br>Nơi mọi điều ước đều có thể trở thành hiện thực...<br><br>miễn là bạn đủ khả năng trả giá.'
             }
         ];
 
@@ -473,10 +464,10 @@
                 img.alt = 'Slide ' + (i + 1);
                 track.appendChild(img);
 
-                // text panel
+                // text panel — tất cả đều visible tạm để đo chiều cao
                 const p = document.createElement('p');
-                p.className = 'fn-text-panel' + (i === 0 ? ' active' : '');
-                p.textContent = s.text;
+                p.className = 'fn-text-panel';
+                p.innerHTML = s.text;
                 textStage.appendChild(p);
 
                 // dot
@@ -487,22 +478,25 @@
                 dotsEl.appendChild(dot);
             });
 
-            // Đo chiều cao panel dài nhất để set height cố định cho text stage
+            // Đo chiều cao thật của từng panel (khi vẫn còn position absolute)
+            // bằng cách render tạm với visibility hidden
             const allPanels = textStage.querySelectorAll('.fn-text-panel');
             let maxH = 0;
             allPanels.forEach(p => {
-                const prevPos = p.style.position;
-                const prevOp = p.style.opacity;
-                p.style.position = 'relative';
-                p.style.opacity = '0';
-                p.style.pointerEvents = 'none';
+                // Tạm thời làm visible để đo scroll height
+                p.style.visibility = 'hidden';
+                p.style.opacity = '1';
                 const h = p.scrollHeight;
                 if (h > maxH) maxH = h;
-                p.style.position = prevPos;
-                p.style.opacity = prevOp;
+                p.style.visibility = '';
+                p.style.opacity = '';
             });
-            // Giới hạn tối đa 320px để tránh quá cao trên mobile
-            textStage.style.height = Math.min(maxH + 8, 320) + 'px';
+
+            // Set chiều cao container bằng panel cao nhất + padding
+            textStage.style.height = (maxH + 4) + 'px';
+
+            // Giờ mới activate slide đầu
+            allPanels[0].classList.add('active');
 
             fnStartAuto();
         }
@@ -512,20 +506,14 @@
             const dots = document.querySelectorAll('.fn-dot');
             const track = document.getElementById('fnSlidesTrack');
 
-            // deactivate current text
             panels[fnIndex].classList.remove('active');
             dots[fnIndex].classList.remove('active');
 
             fnIndex = (n + FN_SLIDES.length) % FN_SLIDES.length;
 
-            // slide track
             track.style.transform = `translateX(-${fnIndex * 100}%)`;
-
-            // activate new text + dot with slight delay so transition is visible
-            setTimeout(() => {
-                panels[fnIndex].classList.add('active');
-                dots[fnIndex].classList.add('active');
-            }, 120);
+            panels[fnIndex].classList.add('active');
+            dots[fnIndex].classList.add('active');
         }
 
         function fnMove(dir) {
@@ -584,6 +572,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/music-player.js"></script>
 </body>
 
 </html>
