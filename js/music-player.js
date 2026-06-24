@@ -14,9 +14,10 @@
 // =============================================================================
 (function () {
 
-  // ── CẤU HÌNH — thay bằng URL GAS thật của bạn ──────────────────────────────
-  // Nếu để rỗng ('') thì chỉ dùng nhạc local (upload trực tiếp trên trình duyệt)
-  const GAS_URL = typeof window.FN_GAS_URL !== 'undefined' ? window.FN_GAS_URL : '';
+  // ── CẤU HÌNH ────────────────────────────────────────────────────────────────
+  const GAS_URL           = typeof window.FN_GAS_URL           !== 'undefined' ? window.FN_GAS_URL           : '';
+  const CDN_CLOUD_NAME    = typeof window.FN_CDN_CLOUD_NAME    !== 'undefined' ? window.FN_CDN_CLOUD_NAME    : 'drachynaq';
+  const CDN_UPLOAD_PRESET = typeof window.FN_CDN_UPLOAD_PRESET !== 'undefined' ? window.FN_CDN_UPLOAD_PRESET : 'n3he1tcy';
 
   // ── IndexedDB ───────────────────────────────────────────────────────────────
   const DB_NAME    = 'fn_music_db';
@@ -467,21 +468,67 @@
     if (!isPlaying && TRACKS.length) play();
   });
 
-  // ── UPLOAD FILES ────────────────────────────────────────────────────────────
+  // ── UPLOAD FILES → CLOUDINARY → GAS ────────────────────────────────────────
+  async function uploadToCloudinary(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CDN_UPLOAD_PRESET);
+    fd.append('resource_type', 'video'); // Cloudinary dùng 'video' cho audio
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD_NAME}/video/upload`, { method: 'POST', body: fd });
+    const json = await res.json();
+    if (!json.secure_url) throw new Error(json.error?.message || 'Upload Cloudinary thất bại');
+    return json.secure_url;
+  }
+
+  async function saveToGAS(title, src) {
+    if (!GAS_URL) return;
+    const session = JSON.parse(sessionStorage.getItem('fee_noire_session') || '{}');
+    const res  = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'addMusic', token: session.token, title, src })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Lưu GAS thất bại');
+  }
+
+  function showUploadStatus(msg, isError) {
+    let el = document.getElementById('fnUploadStatus');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fnUploadStatus';
+      el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:rgba(14,11,20,0.95);border:1px solid rgba(187,134,252,0.4);border-radius:20px;' +
+        'padding:7px 16px;font-size:.75rem;font-family:Quicksand,sans-serif;z-index:4000;' +
+        'color:#e0e0e0;pointer-events:none;transition:opacity .3s;';
+      document.body.appendChild(el);
+    }
+    el.style.color = isError ? '#ff4757' : '#bb86fc';
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+  }
+
   async function handleFiles(files) {
     if (!files || !files.length) return;
-    const wasEmpty = TRACKS.length === 0;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('audio/')) continue;
-      const id = await dbPut(db, { title: file.name.replace(/\.[^.]+$/, ''), blob: file });
-      TRACKS.push({ id, title: file.name.replace(/\.[^.]+$/, ''), blob: file });
+    const arr = Array.from(files).filter(f => f.type.startsWith('audio/'));
+    if (!arr.length) return;
+
+    for (const file of arr) {
+      const title = file.name.replace(/\.[^.]+$/, '');
+      showUploadStatus(`Đang upload "${title}"…`);
+      try {
+        const src = await uploadToCloudinary(file);
+        await saveToGAS(title, src);
+        showUploadStatus(`✓ Đã thêm "${title}"`);
+      } catch (ex) {
+        showUploadStatus(`✗ ${ex.message}`, true);
+        continue;
+      }
     }
-    if (!TRACKS.length) return;
-    // Rebuild shuffle nếu đang bật
-    if (isShuffle) shuffleOrder = buildShuffleOrder();
-    showPlayerMode(true);
-    if (wasEmpty) loadTrack(0);
-    play();
+    // Reload danh sách từ GAS sau khi upload xong
+    window.dispatchEvent(new Event('fn:musicLibraryChanged'));
   }
 
   uploadInput.addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
@@ -490,26 +537,38 @@
   // ── XÓA BÀI ────────────────────────────────────────────────────────────────
   delBtn.addEventListener('click', async () => {
     if (!TRACKS.length) return;
-    const realIdx  = currentTrackRealIdx();
-    const removedId = TRACKS[realIdx].id;
+    const realIdx   = currentTrackRealIdx();
+    const track     = TRACKS[realIdx];
     pause();
-    await dbDelete(db, removedId);
-    TRACKS.splice(realIdx, 1);
-    if (currentBlob) { URL.revokeObjectURL(currentBlob); currentBlob = null; }
 
-    if (!TRACKS.length) {
-      audio.src = ''; showPlayerMode(false); return;
+    try {
+      if (track._src === 'gas' && GAS_URL) {
+        // Xóa bài GAS: id có dạng 'gas_music_xxx', bỏ prefix 'gas_'
+        const gasId  = track.id.replace(/^gas_/, '');
+        const session = JSON.parse(sessionStorage.getItem('fee_noire_session') || '{}');
+        const res  = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'deleteMusic', token: session.token, id: gasId })
+        });
+        const json = await res.json();
+        if (json.status !== 'ok') throw new Error(json.message);
+        showUploadStatus(`✓ Đã xóa "${track.title}"`);
+        window.dispatchEvent(new Event('fn:musicLibraryChanged'));
+      } else {
+        // Xóa bài local (IndexedDB)
+        await dbDelete(db, track.id);
+        TRACKS.splice(realIdx, 1);
+        if (currentBlob) { URL.revokeObjectURL(currentBlob); currentBlob = null; }
+        if (!TRACKS.length) { audio.src = ''; showPlayerMode(false); return; }
+        if (isShuffle) { shuffleOrder = buildShuffleOrder(); currentIdx = 0; }
+        else { if (currentIdx >= TRACKS.length) currentIdx = 0; }
+        loadTrack(currentIdx);
+        play();
+      }
+    } catch (ex) {
+      showUploadStatus(`✗ ${ex.message}`, true);
     }
-    // Rebuild shuffle order sau khi xóa
-    if (isShuffle) {
-      shuffleOrder = buildShuffleOrder();
-      currentIdx = 0;
-    } else {
-      if (currentIdx >= TRACKS.length) currentIdx = 0;
-    }
-    loadTrack(currentIdx);
-    play();
-    window.dispatchEvent(new Event('fn:musicLibraryChanged'));
   });
 
   // ── ĐỒNG BỘ VỚI TAB ADMIN ──────────────────────────────────────────────────
