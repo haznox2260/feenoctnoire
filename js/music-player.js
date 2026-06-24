@@ -515,6 +515,9 @@
     const arr = Array.from(files).filter(f => f.type.startsWith('audio/'));
     if (!arr.length) return;
 
+    const wasEmpty = TRACKS.length === 0;
+    let addedAny = false;
+
     for (const file of arr) {
       const title = file.name.replace(/\.[^.]+$/, '');
       showUploadStatus(`Đang upload "${title}"…`);
@@ -522,13 +525,29 @@
         const src = await uploadToCloudinary(file);
         await saveToGAS(title, src);
         showUploadStatus(`✓ Đã thêm "${title}"`);
+
+        // Thêm thẳng vào TRACKS luôn, không chờ GAS fetch lại
+        const tempId = 'gas_music_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        TRACKS.push({ id: tempId, title, src, _src: 'gas' });
+        addedAny = true;
       } catch (ex) {
         showUploadStatus(`✗ ${ex.message}`, true);
-        continue;
       }
     }
-    // Reload danh sách từ GAS sau khi upload xong
-    window.dispatchEvent(new Event('fn:musicLibraryChanged'));
+
+    if (!addedAny) return;
+
+    if (isShuffle) shuffleOrder = buildShuffleOrder();
+    showPlayerMode(true);
+
+    if (wasEmpty) {
+      // Phát bài đầu tiên vừa thêm
+      const startPos = isShuffle ? 0 : TRACKS.length - (arr.filter(f => f.type.startsWith('audio/')).length);
+      loadTrack(Math.max(0, startPos));
+      play();
+    }
+    // Sau 2s re-fetch GAS để sync id thật (tránh id tạm)
+    setTimeout(() => window.dispatchEvent(new Event('fn:musicLibraryChanged')), 2000);
   }
 
   uploadInput.addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
