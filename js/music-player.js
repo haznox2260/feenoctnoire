@@ -14,6 +14,10 @@
 // =============================================================================
 (function () {
 
+  // ── CẤU HÌNH — thay bằng URL GAS thật của bạn ──────────────────────────────
+  // Nếu để rỗng ('') thì chỉ dùng nhạc local (upload trực tiếp trên trình duyệt)
+  const GAS_URL = typeof window.FN_GAS_URL !== 'undefined' ? window.FN_GAS_URL : '';
+
   // ── IndexedDB ───────────────────────────────────────────────────────────────
   const DB_NAME    = 'fn_music_db';
   const DB_VER     = 1;
@@ -355,9 +359,14 @@
     const realIdx = currentTrackRealIdx();
     const t = TRACKS[realIdx];
     if (!t) return;
-    if (currentBlob) URL.revokeObjectURL(currentBlob);
-    currentBlob = URL.createObjectURL(t.blob);
-    audio.src = currentBlob;
+    if (currentBlob) { URL.revokeObjectURL(currentBlob); currentBlob = null; }
+    // Ưu tiên blob (local upload), fallback sang src URL (GAS)
+    if (t.blob) {
+      currentBlob = URL.createObjectURL(t.blob);
+      audio.src = currentBlob;
+    } else {
+      audio.src = t.src;
+    }
     if (seekTo > 0) {
       audio.addEventListener('loadedmetadata', function onMeta() {
         audio.currentTime = seekTo;
@@ -509,8 +518,25 @@
     const wasPlaying = isPlaying;
     const savedId    = TRACKS[currentTrackRealIdx()]?.id;
     pause();
-    const rows = await dbGetAll(db);
-    TRACKS = rows.map(r => ({ id: r.id, title: r.title, blob: r.blob }));
+
+    // Re-load local
+    const rows2 = await dbGetAll(db);
+    const local2 = rows2.map(r => ({ id: r.id, title: r.title, blob: r.blob, _src: 'local' }));
+
+    // Re-fetch GAS
+    let gas2 = [];
+    if (typeof GAS_URL !== 'undefined' && GAS_URL) {
+      try {
+        const res  = await fetch(GAS_URL + '?action=getMusic');
+        const json = await res.json();
+        if (json.status === 'ok' && Array.isArray(json.music)) {
+          gas2 = json.music.filter(m => m.src)
+            .map(m => ({ id: 'gas_' + m.id, title: m.title, src: m.src, _src: 'gas' }));
+        }
+      } catch (_) {}
+    }
+    const gasIds2 = new Set(gas2.map(t => t.id));
+    TRACKS = [...gas2, ...local2.filter(t => !gasIds2.has(t.id))];
     if (!TRACKS.length) {
       if (currentBlob) { URL.revokeObjectURL(currentBlob); currentBlob = null; }
       audio.src = ''; showPlayerMode(false); return;
@@ -531,8 +557,28 @@
     try { db = await openDB(); }
     catch { db = null; applyRoleUI(); showPlayerMode(false); return; }
 
+    // ── Load nhạc local (IndexedDB) — chỉ admin upload được ──
     const rows  = await dbGetAll(db);
-    TRACKS = rows.map(r => ({ id: r.id, title: r.title, blob: r.blob }));
+    const localTracks = rows.map(r => ({ id: r.id, title: r.title, blob: r.blob, _src: 'local' }));
+
+    // ── Load nhạc từ GAS (tất cả user đều thấy) ──
+    let gasTracks = [];
+    if (typeof GAS_URL !== 'undefined' && GAS_URL) {
+      try {
+        const res  = await fetch(GAS_URL + '?action=getMusic');
+        const json = await res.json();
+        if (json.status === 'ok' && Array.isArray(json.music)) {
+          gasTracks = json.music
+            .filter(m => m.src)
+            .map(m => ({ id: 'gas_' + m.id, title: m.title, src: m.src, _src: 'gas' }));
+        }
+      } catch (_) { /* GAS lỗi → chỉ dùng local */ }
+    }
+
+    // Merge: GAS trước (thứ tự admin đặt), local sau (bài admin upload thêm tạm)
+    // Tránh trùng nếu có bài nào cùng id
+    const gasIds = new Set(gasTracks.map(t => t.id));
+    TRACKS = [...gasTracks, ...localTracks.filter(t => !gasIds.has(t.id))];
 
     const st    = loadState();
     isMuted     = !!st.muted;
