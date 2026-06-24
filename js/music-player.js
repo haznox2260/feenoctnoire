@@ -516,6 +516,7 @@
     if (!arr.length) return;
 
     const wasEmpty = TRACKS.length === 0;
+    const firstNewIdx = TRACKS.length; // index của bài đầu tiên sẽ thêm vào
     let addedAny = false;
 
     for (const file of arr) {
@@ -525,8 +526,6 @@
         const src = await uploadToCloudinary(file);
         await saveToGAS(title, src);
         showUploadStatus(`✓ Đã thêm "${title}"`);
-
-        // Thêm thẳng vào TRACKS luôn, không chờ GAS fetch lại
         const tempId = 'gas_music_' + Date.now() + '_' + Math.random().toString(36).slice(2);
         TRACKS.push({ id: tempId, title, src, _src: 'gas' });
         addedAny = true;
@@ -540,13 +539,12 @@
     if (isShuffle) shuffleOrder = buildShuffleOrder();
     showPlayerMode(true);
 
-    if (wasEmpty) {
-      // Phát bài đầu tiên vừa thêm
-      const startPos = isShuffle ? 0 : TRACKS.length - (arr.filter(f => f.type.startsWith('audio/')).length);
-      loadTrack(Math.max(0, startPos));
+    if (wasEmpty || !isPlaying) {
+      // Nếu chưa có nhạc hoặc đang không phát → load & play bài vừa thêm
+      loadTrack(isShuffle ? 0 : firstNewIdx);
       play();
     }
-    // Sau 2s re-fetch GAS để sync id thật (tránh id tạm)
+    // Sau 2s re-fetch GAS để sync id thật
     setTimeout(() => window.dispatchEvent(new Event('fn:musicLibraryChanged')), 2000);
   }
 
