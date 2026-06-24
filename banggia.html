@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fée Noire - Bảng Giá Dịch Vụ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Sansita+Swashed:wght@300..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-custom.css">
+
+<style id="fn-mobile-nav-css">
+/* FÉE NOIRE — Mobile Nav (loaded from style.css, this block is a safety fallback) */
+@media (max-width: 768px) {
+    .navbar { padding: 0 16px !important; height: 62px; }
+    .logo { font-size: 1.9rem; }
+    .nav-links { display: none !important; }
+    .staff-page-bg { padding-top: 80px; }
+}
+</style>
+
+</head>
+<body class="staff-page-bg">
+
+    <header class="navbar">
+        <div class="logo">Fée Noire</div>
+        <nav class="nav-links d-flex align-items-center">
+            <a href="index.html">Trang Chủ</a>
+             <!-- Dropdown Câu Chuyện -->
+            <div class="nav-dropdown-wrapper">
+                <a href="#" class="nav-dropdown-trigger">
+                    Câu Chuyện <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7rem;"></i>
+                </a>
+                <div class="nav-dropdown-menu">
+                    <a href="cauchuyen.html"><i class="fa-solid fa-book-open me-2"></i>Câu Chuyện</a>
+                    <a href="trananh.html"><i class="fa-solid fa-images me-2"></i>Tranh Ảnh</a>
+                </div>
+            </div>
+            <a href="nhanvien.html">Staff</a>
+            <a href="banggia.html" class="active">Bảng Giá</a>
+            <a href="https://haznox2260.github.io/FN_fo/">Đặt Đơn</a>
+            <a id="navManageLink" href="admin.html" class="btn-admin" style="display:none;">Quản Lý</a>
+            <button id="navAuthBtn" class="btn btn-sm btn-outline-warning rounded-pill px-3 ms-3"
+                data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas">
+                <i class="fa-solid fa-user-shield me-1"></i>
+                <span id="navUserText">Đăng Nhập</span>
+            </button>
+        </nav>
+    </header>
+    <!-- MOBILE OVERLAY -->
+    <div class="fn-mobile-overlay" id="fnMobileOverlay" onclick="fnCloseDrawer()"></div>
+
+    <!-- MOBILE DRAWER -->
+    <div class="fn-mobile-drawer" id="fnMobileDrawer">
+        <div class="fn-drawer-header">
+            <span class="fn-drawer-logo">F&#233;e Noire</span>
+            <button class="fn-drawer-close" onclick="fnCloseDrawer()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <nav class="fn-drawer-nav" id="fnDrawerNav"></nav>
+        <div class="fn-drawer-footer">
+            <button id="fnDrawerAuthBtn"
+                class="btn btn-outline-warning w-100"
+                data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas"
+                onclick="fnCloseDrawer()">
+                <i class="fa-solid fa-user-shield me-2"></i>
+                <span id="fnDrawerUserText">&#272;&#259;ng Nh&#7853;p</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Logic mobile drawer (mo/dong, build menu, dong bo dang nhap) da duoc gop vao auth.js -->
+
+
+    <main class="container json-staff-container" style="max-width: 900px;">
+        <div class="text-center section-header">
+            <h1 class="page-title">Bảng Giá Dịch Vụ</h1>
+            <p class="page-subtitle">Tìm kiếm dịch vụ phù hợp với hành trình Sky của bạn</p>
+        </div>
+
+        <!-- Ô Tìm Kiếm Dịch Vụ -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8">
+                <div class="input-group search-box-wrapper">
+                    <span class="input-group-text bg-transparent border-end-0 text-white-50">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="priceSearchInput" class="form-control bg-transparent text-white border-start-0 custom-search-input" 
+                        placeholder="Nhập tên dịch vụ bạn cần tìm kiếm giá..." onkeyup="searchPrice()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bộ Lọc Danh Mục -->
+        <div class="d-flex justify-content-center mb-5 flex-wrap filter-buttons-group">
+            <button class="btn filter-btn active" onclick="filterPrice('all', this)">Tất cả</button>
+            <button class="btn filter-btn" onclick="filterPrice('uber', this)">⭐️ Uber</button>
+            <button class="btn filter-btn" onclick="filterPrice('logacc', this)">🔑 Logacc</button>
+            <button class="btn filter-btn" onclick="filterPrice('host', this)">🌙 Host tâm sự</button>
+        </div>
+
+        <!-- Loading -->
+        <div id="priceLoading" class="text-center py-5">
+            <div class="spinner-border" style="color:var(--accent-glow);"></div>
+            <p class="text-white-50 small mt-2">Đang tải bảng giá...</p>
+        </div>
+
+        <!-- Danh sách hiển thị giá dạng Card mờ kính -->
+        <div id="priceContainer" class="row g-4">
+            <!-- Dữ liệu render từ Google Sheets tại đây -->
+        </div>
+    </main>
+
+    <!-- Thanh Tính Tổng Giá Cố Định -->
+    <div id="cartBar" style="
+        display: none;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 2000;
+        background: rgba(10, 8, 18, 0.97);
+        border-top: 2px solid rgba(187,134,252,0.45);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        padding: 10px 20px 12px;
+        box-shadow: 0 -12px 40px rgba(0,0,0,0.6), 0 -1px 0 rgba(187,134,252,0.1);
+    ">
+        <div class="container" style="max-width: 900px;">
+
+            <!-- Hàng 1: đã chọn + tổng + bỏ chọn -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-calculator" style="color:#bb86fc;font-size:0.9rem;"></i>
+                    <span class="text-white-50 small">Đã chọn</span>
+                    <span id="cartCount" class="fw-bold" style="color:#bb86fc;">0 dịch vụ</span>
+                </div>
+
+                <!-- Tổng giá — luôn hiển thị rõ ràng -->
+                <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <div id="cartTimTotal" style="display:none; text-align:right;">
+                        <div class="text-white-50" style="font-size:0.68rem;letter-spacing:0.5px;">TỔNG TIM</div>
+                        <div id="cartTimValue" style="color:#ff6b8a;font-weight:700;font-size:1.15rem;line-height:1.2;"></div>
+                    </div>
+                    <div id="cartVndTotal" style="display:none; text-align:right;">
+                        <div class="text-white-50" style="font-size:0.68rem;letter-spacing:0.5px;">TỔNG VNĐ</div>
+                        <div id="cartVndValue" style="color:#ffd700;font-weight:700;font-size:1.15rem;line-height:1.2;"></div>
+                    </div>
+                    <button onclick="clearCart()" class="btn btn-sm rounded-pill px-3"
+                        style="border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:0.78rem;padding:5px 14px;">
+                        <i class="fa-solid fa-xmark me-1"></i>Xóa tất cả
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hàng 2: tag tên dịch vụ đã chọn -->
+            <div id="cartItems" class="mt-2 d-flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+    <div id="cartBarSpacer" style="display:none; height: 95px;"></div>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Fée Noire. All rights reserved. Khơi nguồn phép thuật trong thế giới Sky.</p>
+    </footer>
+
+    <!-- Modal QR Thanh Toán -->
+    <div class="modal fade" id="qrPayModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal-content text-center">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-white w-100" style="font-family:'Dancing Script',cursive;font-size:1.6rem;letter-spacing:1px;">
+                        <i class="fa-solid fa-qrcode text-warning me-2"></i>Thanh Toán Fée Noire
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);position:absolute;right:18px;top:18px;"></button>
+                </div>
+                <div class="modal-body pt-3 pb-4 px-4">
+                    <p class="text-white-50 small mb-3">Quét mã QR để chuyển khoản thanh toán dịch vụ</p>
+
+                    <!-- ĐẶT ẢNH QR CỦA BẠN VÀO ĐÂY -->
+                    <div style="background:white;border-radius:16px;padding:16px;display:inline-block;box-shadow:0 0 30px rgba(187,134,252,0.25);">
+                        <img id="qrPayImg"
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=FeeNoire-Thanhtoan"
+                            alt="QR Thanh Toán Fée Noire"
+                            style="width:220px;height:220px;display:block;border-radius:8px;">
+                    </div>
+
+                    <div class="mt-3 px-2">
+                        <div class="d-flex justify-content-between align-items-center py-2" style="border-top:1px solid rgba(187,134,252,0.15);">
+                            <span class="text-white-50 small">Ngân hàng</span>
+                            <span class="text-white small fw-bold">Thay bằng ngân </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2" style="border-top:1px solid rgba(187,134,252,0.15);">
+                            <span class="text-white-50 small">Số tài khoản</span>
+                            <span class="text-warning small fw-bold" id="qrAccNum">0123456789</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2" style="border-top:1px solid rgba(187,134,252,0.15);">
+                            <span class="text-white-50 small">Chủ tài khoản</span>
+                            <span class="text-white small fw-bold">FÉE NOIRE</span>
+                        </div>
+                    </div>
+
+                    <p class="text-white-50 small mt-3 mb-0" style="font-size:0.75rem;">
+                        ✦ Ghi nội dung chuyển khoản: <span class="text-warning">Tên dịch vụ + IGN Sky</span> ✦
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút QR cố định góc dưới phải -->
+    <button id="btnQRPay"
+        data-bs-toggle="modal" data-bs-target="#qrPayModal"
+        style="
+            position:fixed;
+            bottom:24px;right:24px;
+            z-index:2500;
+            width:58px;height:58px;
+            border-radius:50%;
+            border:1px solid rgba(187,134,252,0.45);
+            background:rgba(14,11,20,0.88);
+            color:#bb86fc;
+            font-size:1.4rem;
+            display:flex;align-items:center;justify-content:center;
+            cursor:pointer;
+            box-shadow:0 8px 28px rgba(0,0,0,0.4),0 0 18px rgba(187,134,252,0.15);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            transition:all 0.25s ease;
+        "
+        title="Xem QR Thanh Toán"
+        onmouseenter="this.style.transform='scale(1.12)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.4),0 0 28px rgba(187,134,252,0.35)'"
+        onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.4),0 0 18px rgba(187,134,252,0.15)'"
+    >
+        <i class="fa-solid fa-qrcode"></i>
+    </button>
+
+    <style>
+        /* Card được chọn */
+        .selected-card {
+            border-color: rgba(187,134,252,0.6) !important;
+            box-shadow: 0 0 0 2px rgba(187,134,252,0.35), 0 8px 24px rgba(0,0,0,0.4) !important;
+            background: rgba(187,134,252,0.08) !important;
+        }
+        .price-card-wrap:hover {
+            transform: translateY(-2px);
+            border-color: rgba(187,134,252,0.4) !important;
+        }
+        /* Tooltip label nổi lên trên nút QR */
+        #btnQRPay::before {
+            content: 'Thanh Toán';
+            position: absolute;
+            right: 68px;
+            white-space: nowrap;
+            background: rgba(14,11,20,0.88);
+            border: 1px solid rgba(187,134,252,0.3);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            color: #bb86fc;
+            font-family: 'Quicksand', sans-serif;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        #btnQRPay:hover::before { opacity: 1; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/music-player.js"></script>
+
+    <script>
+        // =========================================================
+        //  DỮ LIỆU BẢNG GIÁ — KẾT NỐI THẬT GOOGLE SHEETS (sheet "Prices")
+        // =========================================================
+        let allPrices = [];
+        let activeFilter = 'all';
+
+        function categoryBadgeClass(cat) {
+            if (cat === 'uber') return 'badge-cat-uber';
+            if (cat === 'logacc') return 'badge-cat-logacc';
+            if (cat === 'host') return 'badge-cat-host';
+            return 'bg-secondary';
+        }
+
+        async function loadPrices() {
+            const loadingBox = document.getElementById('priceLoading');
+            const container = document.getElementById('priceContainer');
+            loadingBox.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const url = new URL(FEE_NOIRE_CONFIG.GAS_URL);
+                url.searchParams.set('action', 'getPrices');
+                const res = await fetch(url.toString());
+                const data = await res.json();
+
+                if (data.status !== 'ok') throw new Error(data.message || 'Lỗi không xác định');
+
+                allPrices = data.prices || [];
+                loadingBox.style.display = 'none';
+                renderPrices(allPrices);
+            } catch (e) {
+                loadingBox.style.display = 'none';
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="empty-state-box">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <p class="mb-2">Không thể tải bảng giá. Vui lòng thử lại sau.</p>
+                            <button class="btn btn-sm btn-outline-light" onclick="loadPrices()">Thử lại</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // ── Giỏ hàng / tính tổng ──────────────────────────────────────────────
+        let selectedItems = {}; // id → item
+
+        function toggleSelect(id) {
+            const item = allPrices.find(p => String(p.id) === String(id));
+            if (!item) return;
+            if (selectedItems[id]) {
+                delete selectedItems[id];
+            } else {
+                selectedItems[id] = item;
+            }
+            // Cập nhật giao diện card
+            const card = document.querySelector(`.price-card-wrap[data-id="${id}"]`);
+            if (card) card.classList.toggle('selected-card', !!selectedItems[id]);
+            const cb = document.getElementById('chk-' + id);
+            if (cb) cb.checked = !!selectedItems[id];
+            updateCartBar();
+        }
+
+        function clearCart() {
+            selectedItems = {};
+            document.querySelectorAll('.price-card-wrap').forEach(c => c.classList.remove('selected-card'));
+            document.querySelectorAll('.price-card-checkbox').forEach(cb => cb.checked = false);
+            updateCartBar();
+        }
+
+        function parseNumber(str) {
+            if (!str || str.toString().trim() === '' || str.toString().trim() === '-') return NaN;
+            let s = str.toString()
+                .replace(/\./g, '')
+                .replace(/k/gi, '000')
+                .replace(/[^\d]/g, ' ')
+                .trim();
+            const match = s.match(/\d+/);
+            return match ? parseInt(match[0]) : NaN;
+        }
+
+        function updateCartBar() {
+            const bar    = document.getElementById('cartBar');
+            const spacer = document.getElementById('cartBarSpacer');
+            const keys   = Object.keys(selectedItems);
+
+            if (keys.length === 0) {
+                bar.style.display    = 'none';
+                spacer.style.display = 'none';
+                return;
+            }
+
+            bar.style.display    = 'block';
+            spacer.style.display = 'block';
+
+            document.getElementById('cartCount').innerText = keys.length + ' dịch vụ';
+
+            let totalTim = 0, hasTim = false;
+            let totalVnd = 0, hasVnd = false;
+            let rawTimParts = [], rawVndParts = [];
+
+            keys.forEach(id => {
+                const it  = selectedItems[id];
+                const timStr = (it.price_tim || '').toString().trim();
+                const vndStr = (it.price_vnd || '').toString().trim();
+                if (timStr && timStr !== '-') {
+                    hasTim = true;
+                    const n = parseNumber(timStr);
+                    if (!isNaN(n)) totalTim += n;
+                    else rawTimParts.push(timStr);
+                }
+                if (vndStr && vndStr !== '-') {
+                    hasVnd = true;
+                    const n = parseNumber(vndStr);
+                    if (!isNaN(n)) totalVnd += n;
+                    else rawVndParts.push(vndStr);
+                }
+            });
+
+            const timBox = document.getElementById('cartTimTotal');
+            const vndBox = document.getElementById('cartVndTotal');
+
+            if (hasTim) {
+                timBox.style.display = '';
+                let timText = totalTim > 0 ? totalTim + ' tim' : '';
+                if (rawTimParts.length) timText += (timText ? ' + ' : '') + rawTimParts.join(' + ');
+                document.getElementById('cartTimValue').innerText = timText || '—';
+            } else {
+                timBox.style.display = 'none';
+            }
+
+            if (hasVnd) {
+                vndBox.style.display = '';
+                let vndText = totalVnd > 0 ? totalVnd.toLocaleString('vi-VN') + 'đ' : '';
+                if (rawVndParts.length) vndText += (vndText ? ' + ' : '') + rawVndParts.join(' + ');
+                document.getElementById('cartVndValue').innerText = vndText || '—';
+            } else {
+                vndBox.style.display = 'none';
+            }
+
+            if (!hasTim && !hasVnd) {
+                timBox.style.display = '';
+                document.getElementById('cartTimValue').innerText = 'Xem chi tiết từng dịch vụ';
+            }
+
+            // Tag tên dịch vụ + giá nhỏ
+            document.getElementById('cartItems').innerHTML = keys.map(id => {
+                const it = selectedItems[id];
+                const prices = [
+                    it.price_tim ? 'tim: ' + it.price_tim : '',
+                    it.price_vnd ? 'vnd: ' + it.price_vnd : ''
+                ].filter(Boolean).join(' · ');
+                return '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(187,134,252,0.12);border:1px solid rgba(187,134,252,0.3);color:#e0c7ff;font-size:0.72rem;border-radius:20px;padding:4px 10px;">'
+                    + '<span class="fw-bold">' + it.name + '</span>'
+                    + (prices ? '<span style="opacity:0.65;">' + prices + '</span>' : '')
+                    + '<span onclick="toggleSelect(\'' + id + '\')" style="cursor:pointer;opacity:0.5;font-size:0.85rem;" title="Bo chon">x</span>'
+                    + '</span>';
+            }).join('');
+        }
+
+        function renderPrices(list) {
+            const container = document.getElementById('priceContainer');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="empty-state-box">
+                            <i class="fa-solid fa-tags"></i>
+                            <p class="mb-0">Không tìm thấy dịch vụ nào phù hợp với từ khóa của bạn.</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            list.forEach(item => {
+                const id = item.id;
+                const isSelected = !!selectedItems[id];
+                const subtypeLabel = item.subtype ? `<span class="text-white-50 small ms-1">— ${item.subtype}</span>` : '';
+
+                // Giá tim
+                const timHtml = item.price_tim
+                    ? `<div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="text-white-50 small">❤️ Giá tim:</span>
+                        <span class="text-danger fw-bold">${item.price_tim}</span>
+                       </div>`
+                    : '';
+                // Giá VNĐ
+                const vndHtml = item.price_vnd
+                    ? `<div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="text-white-50 small">💵 Giá VNĐ:</span>
+                        <span class="text-warning fw-bold">${item.price_vnd}</span>
+                       </div>`
+                    : '';
+                // Fallback nếu chỉ có trường price cũ
+                const legacyHtml = (!item.price_tim && !item.price_vnd && item.price)
+                    ? `<div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="text-white-50 small">Giá dịch vụ:</span>
+                        <span class="text-warning fw-bold">${item.price}</span>
+                       </div>`
+                    : '';
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="price-card-wrap skykid-card h-100 d-flex flex-column justify-content-between${isSelected ? ' selected-card' : ''}"
+                            data-id="${id}"
+                            onclick="toggleSelect('${id}')"
+                            style="cursor:pointer; transition: all 0.2s ease; position:relative;">
+
+                            <!-- Checkbox góc trên phải -->
+                            <div style="position:absolute;top:14px;right:14px;">
+                                <input type="checkbox" id="chk-${id}" class="price-card-checkbox"
+                                    ${isSelected ? 'checked' : ''}
+                                    onclick="event.stopPropagation(); toggleSelect('${id}')"
+                                    style="width:18px;height:18px;accent-color:#bb86fc;cursor:pointer;">
+                            </div>
+
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2 pe-5">
+                                    <h4 class="text-white font-dancing-script mb-0 fs-5">${item.name}</h4>
+                                    <span class="badge ${categoryBadgeClass(item.category)} text-uppercase">${item.category}</span>
+                                </div>
+                                <div class="mb-2">${subtypeLabel}</div>
+                                <p class="text-white-50 small mt-3 mb-3">${item.desc || ''}</p>
+                            </div>
+                            <div class="border-top border-secondary border-opacity-25 pt-1">
+                                ${timHtml}${vndHtml}${legacyHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterPrice(category, btn) {
+            activeFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('priceSearchInput').value = '';
+
+            const filtered = category === 'all' ? allPrices : allPrices.filter(p => p.category === category);
+            renderPrices(filtered);
+        }
+
+        function searchPrice() {
+            const keyword = document.getElementById('priceSearchInput').value.toLowerCase().trim();
+            const filtered = allPrices.filter(p => {
+                const matchesKeyword = p.name.toLowerCase().includes(keyword)
+                    || (p.desc || '').toLowerCase().includes(keyword)
+                    || (p.subtype || '').toLowerCase().includes(keyword);
+                const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
+                return matchesKeyword && matchesCategory;
+            });
+            renderPrices(filtered);
+        }
+
+        // Khởi chạy ban đầu — tải dữ liệu thật từ Google Sheets
+        document.addEventListener('DOMContentLoaded', loadPrices);
+    </script>
+</body>
+</html>
