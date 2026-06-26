@@ -19,14 +19,24 @@
             .navbar {
                 padding: 0 16px !important;
                 height: 62px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
 
             .logo {
                 font-size: 1.9rem;
+                flex: 1; /* đẩy nút auth + hamburger sang phải */
             }
 
             .nav-links {
                 display: none !important;
+            }
+
+            /* Hamburger do auth.js inject — đảm bảo không bị squish */
+            .fn-hamburger {
+                flex-shrink: 0;
+                order: 99; /* luôn nằm cuối cùng bên phải */
             }
 
             .staff-page-bg {
@@ -57,12 +67,13 @@
             <a href="banggia.html">Bảng Giá</a>
             <a href="https://haznox2260.github.io/FN_fo/">Đặt Đơn</a>
             <a id="navManageLink" href="admin.html" class="btn-admin" style="display:none;">Quản Lý</a>
-            <button id="navAuthBtn" class="btn btn-sm btn-outline-warning rounded-pill px-3 ms-3"
-                data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas">
-                <i class="fa-solid fa-user-shield me-1"></i>
-                <span id="navUserText">Đăng Nhập</span>
-            </button>
         </nav>
+        <!-- Nút Auth nằm ngoài nav-links → luôn hiện trên cả desktop lẫn mobile -->
+        <button id="navAuthBtn" class="btn btn-sm btn-outline-warning rounded-pill px-3 fn-auth-btn"
+            data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas">
+            <i class="fa-solid fa-user-shield me-1"></i>
+            <span id="navUserText">Đăng Nhập</span>
+        </button>
     </header>
     <!-- MOBILE OVERLAY -->
     <div class="fn-mobile-overlay" id="fnMobileOverlay" onclick="fnCloseDrawer()"></div>
@@ -95,8 +106,7 @@
             <i class="fa-solid fa-lock text-warning mb-3"
                 style="font-size:3.5rem; filter:drop-shadow(0 0 10px rgba(255,193,7,0.3));"></i>
             <h3 class="font-dancing-script text-white">Quyền Truy Cập Bị Hạn Chế</h3>
-            <p class="text-white-50 small mx-auto">Vui lòng nhấn "Đăng Nhập" ở thanh điều hướng để xác thực phân quyền
-                tài khoản.</p>
+            <p class="text-white-50 small mx-auto">Vui lòng nhấn nút <i class="fa-solid fa-user-shield text-warning"></i> <strong class="text-warning">Đăng Nhập</strong> ở góc trên cùng bên phải để xác thực phân quyền tài khoản.</p>
             <button class="btn btn-submit-comment mt-2 px-4" data-bs-toggle="offcanvas"
                 data-bs-target="#authOffcanvas">Mở Ô Đăng Nhập</button>
         </div>
