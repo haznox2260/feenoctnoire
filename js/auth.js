@@ -207,14 +207,16 @@
 
   function syncNav() {
     const user = getSession();
+    const navbar = document.querySelector('header.navbar');
     const navLinks = document.querySelector('.nav-links');
-    if (!navLinks) return;
-    const adminLink = document.getElementById('navManageLink') || navLinks.querySelector('a[href="admin.html"]');
+    const adminLink = navLinks ? (document.getElementById('navManageLink') || navLinks.querySelector('a[href="admin.html"]')) : null;
     let loginBtn = document.getElementById('navAuthBtn') || document.getElementById('btnOpenAuth');
-    if (!loginBtn) {
-      navLinks.insertAdjacentHTML('beforeend', `
-        <button id="btnOpenAuth" class="btn btn-sm btn-outline-warning ms-3 px-3 rounded-pill">
-          <i class="fa-solid fa-user me-1"></i>Đăng Nhập
+    if (!loginBtn && navbar) {
+      // Chèn trực tiếp vào header.navbar (KHÔNG chèn vào .nav-links),
+      // vì .nav-links bị display:none trên mobile (<=768px) sẽ ẩn mất nút này.
+      navbar.insertAdjacentHTML('beforeend', `
+        <button id="btnOpenAuth" class="btn btn-sm btn-outline-warning fn-auth-btn rounded-pill">
+          <i class="fa-solid fa-user me-1"></i><span id="navUserText">Đăng Nhập</span>
         </button>
       `);
       loginBtn = document.getElementById('btnOpenAuth');
@@ -225,20 +227,18 @@
     }
     if (user && user.token) {
       if (adminLink) adminLink.style.display = (user.role === 'admin' || user.role === 'staff') ? '' : 'none';
-      loginBtn.innerHTML = `<i class="fa-solid fa-circle-user text-success me-1"></i>${user.name}`;
-      loginBtn.className = 'btn btn-sm btn-warning ms-3 px-3 rounded-pill text-dark fw-bold';
-      const userText = document.getElementById('navUserText');
-      if (userText) userText.innerText = user.name;
+      loginBtn.innerHTML = `<i class="fa-solid fa-circle-user text-success me-1"></i><span id="navUserText">${user.name}</span>`;
+      // Giữ lại class fn-auth-btn (đã có style responsive riêng cho mobile trong admin-custom.css)
+      loginBtn.className = 'btn btn-sm btn-warning fn-auth-btn rounded-pill text-dark fw-bold';
       document.getElementById('offcanvasLoginForm').classList.add('d-none');
       document.getElementById('offcanvasUserForm').classList.remove('d-none');
       document.getElementById('lblUserName').innerText = user.name;
       document.getElementById('lblUserRole').innerText = user.role === 'admin' ? 'Quản trị viên (admin)' : 'Nhân viên (staff)';
     } else {
       if (adminLink) adminLink.style.display = 'none';
-      loginBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i>Đăng Nhập`;
-      loginBtn.className = 'btn btn-sm btn-outline-warning ms-3 px-3 rounded-pill';
-      const userText = document.getElementById('navUserText');
-      if (userText) userText.innerText = 'Đăng Nhập';
+      loginBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i><span id="navUserText">Đăng Nhập</span>`;
+      // Giữ lại class fn-auth-btn (đã có style responsive riêng cho mobile trong admin-custom.css)
+      loginBtn.className = 'btn btn-sm btn-outline-warning fn-auth-btn rounded-pill';
       document.getElementById('offcanvasLoginForm').classList.remove('d-none');
       document.getElementById('offcanvasUserForm').classList.add('d-none');
     }
