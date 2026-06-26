@@ -170,6 +170,7 @@
     });
     html += '<div class="fn-drawer-divider"></div>';
     html += '<a href="admin.html" id="fnDrawerAdminLink" style="display:none;color:#bb86fc;"><i class="fa-solid fa-shield-halved"></i>Quản Lý</a>';
+    html += '<a href="javascript:void(0)" id="fnDrawerAuthLink" data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas" onclick="FeeNoireAuth.closeDrawer()"><i class="fa-solid fa-user"></i><span id="fnDrawerUserText">Đăng Nhập</span></a>';
     nav.innerHTML = html;
   }
 
@@ -187,12 +188,25 @@
   function syncDrawerAuth(user) {
     const txt = document.getElementById('fnDrawerUserText');
     const adminLink = document.getElementById('fnDrawerAdminLink');
+    const authLink = document.getElementById('fnDrawerAuthLink');
     if (user && user.token) {
       if (txt) txt.innerText = user.name;
       if (adminLink) adminLink.style.display = (user.role === 'admin' || user.role === 'staff') ? '' : 'none';
+      if (authLink) {
+        // Đã đăng nhập: bấm vào sẽ đi tới Bàn Làm Việc, không mở lại form đăng nhập
+        authLink.removeAttribute('data-bs-toggle');
+        authLink.removeAttribute('data-bs-target');
+        authLink.setAttribute('href', 'admin.html');
+      }
     } else {
       if (txt) txt.innerText = 'Đăng Nhập';
       if (adminLink) adminLink.style.display = 'none';
+      if (authLink) {
+        // Chưa đăng nhập: bấm vào sẽ mở offcanvas đăng nhập
+        authLink.setAttribute('href', 'javascript:void(0)');
+        authLink.setAttribute('data-bs-toggle', 'offcanvas');
+        authLink.setAttribute('data-bs-target', '#authOffcanvas');
+      }
     }
   }
 
