@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fée Noire - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Sansita+Swashed:wght@300..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-custom.css">
+
+    <style id="fn-mobile-nav-css">
+        /* FÉE NOIRE — Mobile Nav (loaded from style.css, this block is a safety fallback) */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 16px !important;
+                height: 62px;
+            }
+
+            .logo {
+                font-size: 1.9rem;
+            }
+
+            .nav-links {
+                display: none !important;
+            }
+
+            .staff-page-bg {
+                padding-top: 80px;
+            }
+        }
+    </style>
+
+</head>
+
+<body class="staff-page-bg">
+
+    <header class="navbar">
+        <div class="logo">Fée Noire</div>
+        <nav class="nav-links d-flex align-items-center">
+            <a href="index.html">Trang Chủ</a>
+            <!-- Dropdown Câu Chuyện -->
+            <div class="nav-dropdown-wrapper">
+                <a href="#" class="nav-dropdown-trigger">
+                    Câu Chuyện <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7rem;"></i>
+                </a>
+                <div class="nav-dropdown-menu">
+                    <a href="cauchuyen.html"><i class="fa-solid fa-book-open me-2"></i>Câu Chuyện</a>
+                    <a href="trananh.html"><i class="fa-solid fa-images me-2"></i>Tranh Ảnh</a>
+                </div>
+            </div>
+            <a href="nhanvien.html">Staff</a>
+            <a href="banggia.html">Bảng Giá</a>
+            <a href="https://haznox2260.github.io/FN_fo/">Đặt Đơn</a>
+            <a id="navManageLink" href="admin.html" class="btn-admin" style="display:none;">Quản Lý</a>
+            <button id="navAuthBtn" class="btn btn-sm btn-outline-warning rounded-pill px-3 ms-3"
+                data-bs-toggle="offcanvas" data-bs-target="#authOffcanvas">
+                <i class="fa-solid fa-user-shield me-1"></i>
+                <span id="navUserText">Đăng Nhập</span>
+            </button>
+        </nav>
+    </header>
+    <!-- MOBILE OVERLAY -->
+    <div class="fn-mobile-overlay" id="fnMobileOverlay" onclick="fnCloseDrawer()"></div>
+
+    <!-- MOBILE DRAWER -->
+    <div class="fn-mobile-drawer" id="fnMobileDrawer">
+        <div class="fn-drawer-header">
+            <span class="fn-drawer-logo">F&#233;e Noire</span>
+            <button class="fn-drawer-close" onclick="fnCloseDrawer()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <nav class="fn-drawer-nav" id="fnDrawerNav"></nav>
+        <div class="fn-drawer-footer">
+            <button id="fnDrawerAuthBtn" class="btn btn-outline-warning w-100" data-bs-toggle="offcanvas"
+                data-bs-target="#authOffcanvas" onclick="fnCloseDrawer()">
+                <i class="fa-solid fa-user-shield me-2"></i>
+                <span id="fnDrawerUserText">&#272;&#259;ng Nh&#7853;p</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Logic mobile drawer (mo/dong, build menu, dong bo dang nhap) da duoc gop vao auth.js -->
+
+
+    <main class="container json-staff-container" style="max-width: 1140px; margin-top: 20px;">
+
+        <!-- Chưa đăng nhập -->
+        <div id="noAuthAlert" class="text-center p-5 search-box-wrapper" style="border-radius:20px; margin-top:50px;">
+            <i class="fa-solid fa-lock text-warning mb-3"
+                style="font-size:3.5rem; filter:drop-shadow(0 0 10px rgba(255,193,7,0.3));"></i>
+            <h3 class="font-dancing-script text-white">Quyền Truy Cập Bị Hạn Chế</h3>
+            <p class="text-white-50 small mx-auto">Vui lòng nhấn "Đăng Nhập" ở thanh điều hướng để xác thực phân quyền
+                tài khoản.</p>
+            <button class="btn btn-submit-comment mt-2 px-4" data-bs-toggle="offcanvas"
+                data-bs-target="#authOffcanvas">Mở Ô Đăng Nhập</button>
+        </div>
+
+        <!-- Dashboard (đã đăng nhập) -->
+        <div id="dashboardContent" style="display:none;">
+
+            <!-- Header chung -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div>
+                    <h1 class="page-title fs-2 mb-1" id="dashboardTitle">Bàn Làm Việc</h1>
+                    <p class="text-white-50 small mb-0">
+                        Tài khoản: <span id="userGreeting" class="text-white fw-bold"></span>
+                        <span id="userRoleBadge" class="badge role-badge ms-1"></span>
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <!-- Nút thêm — chỉ hiện ở tab Nhân Viên -->
+                    <button id="addStaffBtn" class="btn btn-submit-comment py-2 px-3" style="display:none;"
+                        onclick="openAddModal()" data-bs-toggle="modal" data-bs-target="#staffModal">
+                        <i class="fa-solid fa-user-plus me-1"></i> Thêm Thẻ Nhân Viên Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── STAT CARDS TỔNG QUAN ── -->
+            <div class="row g-3 mb-4" id="statCardsRow" style="display:none;">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon tone-purple"><i class="fa-solid fa-user-group"></i></div>
+                        <div>
+                            <div class="stat-value" id="statStaffCount">0</div>
+                            <div class="stat-label">Nhân viên</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon tone-cyan"><i class="fa-solid fa-tags"></i></div>
+                        <div>
+                            <div class="stat-value" id="statPriceCount">0</div>
+                            <div class="stat-label">Gói dịch vụ</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon tone-pink"><i class="fa-solid fa-heart"></i></div>
+                        <div>
+                            <div class="stat-value" id="statLikesCount">0</div>
+                            <div class="stat-label">Tổng lượt thích</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon tone-gold"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <div class="stat-value" id="statRoleValue">—</div>
+                            <div class="stat-label">Vai trò hiện tại</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bộ chuyển Tab Quản lý (Chỉ Admin thấy) -->
+            <div class="d-flex mb-4 filter-buttons-group flex-wrap" id="adminTabs" style="display:none !important;">
+                <button class="btn filter-btn active" onclick="switchAdminTab('staff')">
+                    <i class="fa-solid fa-user-group me-1"></i> Quản Lý Nhân Viên
+                </button>
+                <button class="btn filter-btn" onclick="switchAdminTab('price')">
+                    <i class="fa-solid fa-tags me-1"></i> Quản Lý Bảng Giá
+                </button>
+                <button class="btn filter-btn" onclick="switchAdminTab('story')">
+                    <i class="fa-solid fa-book-open me-1"></i> Câu Chuyện & Ảnh
+                </button>
+                <button class="btn filter-btn" onclick="switchAdminTab('music')">
+                    <i class="fa-solid fa-music me-1"></i> Nhạc Nền
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div id="tableLoading" class="text-center py-4">
+                <div class="spinner-border" style="color:var(--accent-glow);"></div>
+                <p class="text-white-50 small mt-2">Đang tải dữ liệu...</p>
+            </div>
+
+            <!-- ── VIEW ADMIN: Bảng đầy đủ ── -->
+            <div id="adminView" style="display:none;">
+
+                <!-- Tab nội dung Staff -->
+                <div id="adminStaffTabContent">
+                    <div class="admin-search-wrapper mb-3" style="max-width:320px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="staffSearchInput" class="form-control admin-search-box"
+                            placeholder="Tìm theo tên, danh mục..." oninput="renderAdminTable(allStaff)">
+                    </div>
+                    <div id="tableWrapper" class="table-responsive search-box-wrapper p-3" style="border-radius:16px;">
+                        <table class="table table-dark table-hover align-middle mb-0 custom-admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Avatar</th>
+                                    <th>Tên Staff</th>
+                                    <th>Danh Mục</th>
+                                    <th>Cung Hoàng Đạo</th>
+                                    <th>Thời Gian</th>
+                                    <th class="text-end">Lượt Thích</th>
+                                    <th class="text-end">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminStaffTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab nội dung Bảng Giá -->
+                <div id="adminPriceTabContent" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="admin-search-wrapper" style="max-width:320px;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="priceSearchInput" class="form-control admin-search-box"
+                                placeholder="Tìm theo tên dịch vụ..." oninput="renderAdminPriceTable(allPrices)">
+                        </div>
+                        <button class="btn btn-submit-comment py-2 px-3" onclick="openAddPriceModal()"
+                            data-bs-toggle="modal" data-bs-target="#priceModal">
+                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> Thêm Gói Dịch Vụ Mới
+                        </button>
+                    </div>
+                    <div class="table-responsive search-box-wrapper p-3" style="border-radius:16px;">
+                        <table class="table table-dark table-hover align-middle mb-0 custom-admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tên Dịch Vụ</th>
+                                    <th>Danh Mục - Loại</th>
+                                    <th>❤️ Giá Tim</th>
+                                    <th>💵 Giá VNĐ</th>
+                                    <th>Mô Tả Chi Tiết</th>
+                                    <th class="text-end">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminPriceTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Tab nội dung Câu Chuyện & Ảnh -->
+                <div id="adminStoryTabContent" style="display:none;">
+                    <!-- Sub-tab: Câu Chuyện / Tranh Ảnh -->
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn filter-btn active" id="storySubTabBtn" onclick="switchStorySubTab('story')">
+                            <i class="fa-solid fa-book-open me-1"></i> Câu Chuyện
+                        </button>
+                        <button class="btn filter-btn" id="gallerySubTabBtn" onclick="switchStorySubTab('gallery')">
+                            <i class="fa-solid fa-images me-1"></i> Tranh Ảnh
+                        </button>
+                    </div>
+
+                    <!-- Sub-tab: Câu Chuyện -->
+                    <div id="storySubContent">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <p class="text-white-50 small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Các bài
+                                viết sẽ hiển thị trên trang Câu Chuyện công khai.</p>
+                            <button class="btn btn-submit-comment py-2 px-3" data-bs-toggle="modal"
+                                data-bs-target="#storyModal" onclick="openAddStoryModal()">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Thêm Bài Viết Mới
+                            </button>
+                        </div>
+                        <div id="storyListAdmin" class="row g-3"></div>
+                        <div id="storyListLoading" class="text-center py-4" style="display:none;">
+                            <div class="spinner-border" style="color:var(--accent-glow);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-tab: Tranh Ảnh -->
+                    <div id="gallerySubContent" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <p class="text-white-50 small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Ảnh sẽ hiển
+                                thị dạng lưới trên trang Tranh Ảnh công khai.</p>
+                            <button class="btn btn-submit-comment py-2 px-3" data-bs-toggle="modal"
+                                data-bs-target="#galleryModal" onclick="openAddGalleryModal()">
+                                <i class="fa-solid fa-image me-1"></i> Thêm Ảnh Mới
+                            </button>
+                        </div>
+                        <div id="galleryListAdmin" class="row g-3"></div>
+                        <div id="galleryListLoading" class="text-center py-4" style="display:none;">
+                            <div class="spinner-border" style="color:var(--accent-glow);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab nội dung Nhạc Nền -->
+                <div id="adminMusicTabContent" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <p class="text-white-50 small mb-0">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            Nhạc lưu trong trình duyệt này. Upload file MP3 để thêm vào playlist.
+                        </p>
+                        <label class="btn btn-submit-comment py-2 px-3" style="cursor:pointer;">
+                            <i class="fa-solid fa-upload me-1"></i> Upload MP3
+                            <input type="file" id="adminMusicUpload" accept="audio/mp3,audio/mpeg,audio/*" multiple
+                                style="display:none;">
+                        </label>
+                    </div>
+                    <div id="musicListAdmin" class="d-flex flex-column gap-2">
+                        <div class="empty-state-box">
+                            <i class="fa-solid fa-music"></i>
+                            <p>Chưa có bài nhạc nào. Upload file MP3 để bắt đầu!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="staffView" style="display:none;">
+                <p class="text-white-50 small mb-3"><i class="fa-solid fa-circle-info me-1"></i> Chọn thẻ nhân viên để
+                    xem và quản lý bình luận.</p>
+                <div id="staffCardGrid" class="row g-3"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Thêm/Sửa Staff -->
+    <div class="modal fade" id="staffModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="staffModalLabel">Thông Tin Skykid Card</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form id="staffForm" onsubmit="saveStaff(event)">
+                        <input type="hidden" id="editStaffId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Tên Staff</label>
+                                <input type="text" id="staffName" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Luix">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Phân loại danh mục</label>
+                                <select id="staffCategory" class="form-select custom-textarea" required>
+                                    <option value="uber">Uber</option>
+                                    <option value="logacc">Logacc</option>
+                                    <option value="trực">Trực</option>
+                                    <option value="host">Host tâm sự</option>
+                                    <option value="host">Host couple</option>
+                                    <option value="host">Host đàn</option>
+                                    <option value="host">Host treo</option>
+                                    <option value="artist">Artist</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Position</label>
+                                <input type="text" id="staffPosition" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Host tâm sự/otp">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Zodiac</label>
+                                <input type="text" id="staffZodiac" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Capricorn">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Thời gian</label>
+                                <input type="text" id="staffTime" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Đêm trăng đầy sao">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Link ảnh đại diện</label>
+                                <div class="input-group">
+                                    <input type="url" id="staffImg" class="form-control custom-textarea" required
+                                        placeholder="https://..." oninput="previewStaffImg()">
+                                    <button type="button" class="btn btn-outline-info"
+                                        onclick="document.getElementById('staffImgFile').click()"
+                                        title="Upload ảnh từ máy">
+                                        <i class="fa-solid fa-upload"></i>
+                                    </button>
+                                </div>
+                                <input type="file" id="staffImgFile" accept="image/*" class="d-none"
+                                    onchange="uploadStaffImgFile(this)">
+                                <div id="staffImgUploadStatus" class="small mt-1"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Slogan</label>
+                                <input type="text" id="staffSlogan" class="form-control custom-textarea" required
+                                    placeholder="Không phải là tạch size đâu">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Xem trước ảnh</label>
+                                <div class="img-preview-box" id="staffImgPreviewBox">
+                                    <span class="placeholder-text">Nhập link ảnh để xem trước</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4 me-2"
+                                data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" id="saveStaffBtn" class="btn btn-submit-comment px-4">Lưu Dữ
+                                Liệu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Bảng Giá -->
+    <div class="modal fade" id="priceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="priceModalLabel">Thêm Gói Dịch Vụ Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form id="priceForm" onsubmit="savePrice(event)">
+                        <input type="hidden" id="editPriceId">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Tên Dịch Vụ</label>
+                                <input type="text" id="priceName" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Uber Full Map 6 Vùng">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Danh mục</label>
+                                <select id="priceCategory" class="form-select custom-textarea" required>
+                                    <option value="uber">Uber</option>
+                                    <option value="logacc">Logacc</option>
+                                    <option value="host">Host tâm sự</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Loại chi tiết</label>
+                                <input type="text" id="priceSubtype" class="form-control custom-textarea"
+                                    placeholder="Ví dụ: Nocape, Tâm sự, Otp...">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">
+                                    <i class="fa-solid fa-heart text-danger me-1"></i>Giá Tim (❤️)
+                                </label>
+                                <input type="text" id="priceTim" class="form-control custom-textarea"
+                                    placeholder="Ví dụ: 3 tim, 5 tim/h">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">
+                                    <i class="fa-solid fa-money-bill-wave text-success me-1"></i>Giá VNĐ (💵)
+                                </label>
+                                <input type="text" id="priceVnd" class="form-control custom-textarea"
+                                    placeholder="Ví dụ: 50.000đ hoặc 30.000đ/h">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Mô tả chi tiết</label>
+                                <textarea id="priceDesc" class="form-control custom-textarea" rows="3"
+                                    placeholder="Mô tả ngắn gọn về gói dịch vụ này"></textarea>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4 me-2"
+                                data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" id="savePriceBtn" class="btn btn-submit-comment px-4">Lưu Dữ
+                                Liệu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quản lý Feedback -->
+    <div class="modal fade" id="adminFeedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="adminFeedbackTitle">Quản Lý Feedback</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <div id="adminFeedbackList" class="feedback-list-box" style="max-height:280px; overflow-y:auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Câu Chuyện -->
+    <div class="modal fade" id="storyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="storyModalLabel">
+                        <i class="fa-solid fa-book-open me-2 text-warning"></i>Bài Viết Câu Chuyện
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form id="storyForm" onsubmit="saveStory(event)">
+                        <input type="hidden" id="editStoryId">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Tiêu đề bài viết</label>
+                                <input type="text" id="storyTitle" class="form-control custom-textarea" required
+                                    placeholder="Ví dụ: Hành Trình Đầu Tiên Của Fée Noire...">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Link ảnh bìa</label>
+                                <input type="url" id="storyCover" class="form-control custom-textarea"
+                                    placeholder="https://... (để trống nếu không có)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Thẻ / Tag</label>
+                                <input type="text" id="storyTag" class="form-control custom-textarea"
+                                    placeholder="Ví dụ: Sự kiện, Nội bộ, Sky...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Nội dung bài viết</label>
+                                <textarea id="storyContent" class="form-control custom-textarea" rows="7" required
+                                    placeholder="Kể câu chuyện của Fée Noire tại đây..."></textarea>
+                                <p class="text-white-50 small mt-1">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Xuống dòng bằng Enter, đoạn văn sẽ tự tách khi hiển thị.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4 me-2"
+                                data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" id="saveStoryBtn" class="btn btn-submit-comment px-4">Lưu Bài
+                                Viết</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Ảnh Gallery -->
+    <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="galleryModalLabel">
+                        <i class="fa-solid fa-image me-2 text-warning"></i>Thêm Tranh Ảnh
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form id="galleryForm" onsubmit="saveGallery(event)">
+                        <input type="hidden" id="editGalleryId">
+                        <input type="hidden" id="galleryImgUrl">
+                        <div class="row g-3">
+                            <!-- Upload từ máy -->
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">
+                                    <i class="fa-solid fa-upload me-1"></i>Upload ảnh từ máy <span class="text-danger">*</span>
+                                </label>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <label class="btn btn-outline-warning rounded-pill px-3 py-2 mb-0" style="cursor:pointer;font-size:0.85rem;">
+                                        <i class="fa-solid fa-folder-open me-1"></i>Chọn ảnh
+                                        <input type="file" accept="image/*" style="display:none;"
+                                            onchange="uploadGalleryImgFile(this)">
+                                    </label>
+                                    <span id="galleryImgUploadStatus" class="small"></span>
+                                </div>
+                            </div>
+                            <!-- Preview -->
+                            <div class="col-12" id="galleryPreviewBox" style="display:none;">
+                                <div class="img-preview-box" style="height:180px;">
+                                    <img id="galleryPreviewImg" src="" alt="preview"
+                                        style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                                </div>
+                            </div>
+                            <!-- Caption -->
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Chú thích ảnh</label>
+                                <input type="text" id="galleryCaption" class="form-control custom-textarea"
+                                    placeholder="Mô tả ngắn về ảnh này...">
+                            </div>
+                            <!-- Tag -->
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Thẻ / Tag</label>
+                                <input type="text" id="galleryTag" class="form-control custom-textarea"
+                                    placeholder="Ví dụ: Sky, Fanart, Sự kiện...">
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4 me-2"
+                                data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" id="saveGalleryBtn" class="btn btn-submit-comment px-4">Lưu Ảnh</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/music-config.js"></script>
+    <script src="js/music-player.js"></script>
+    <script>
+        // =========================================================
+        //  STATE — lấy từ FeeNoireAuth, không duplicate
+        // =========================================================
+        let activeStaffIdForFeedback = null;
+        let currentAdminTab = 'staff';
+        let currentStorySubTab = 'story';
+        let allStaff = [];
+        let allPrices = [];
+        let allStories = [];
+        let allGallery = [];
+
+        function currentUser() { return FeeNoireAuth.getSession(); }
+
+        // Toast ngắn gọn — dùng FeeNoireAuth.toast nếu có, fallback alert nếu auth.js cũ
+        function notify(msg, type) {
+            if (window.FeeNoireAuth && typeof FeeNoireAuth.toast === 'function') {
+                FeeNoireAuth.toast(msg, type);
+            } else {
+                alert(msg);
+            }
+        }
+
+        // =========================================================
+        //  API HELPER
+        // =========================================================
+        async function apiGet(params) {
+            const url = new URL(FEE_NOIRE_CONFIG.GAS_URL);
+            Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+            const res = await fetch(url.toString());
+            return res.json();
+        }
+
+        async function apiPost(body) {
+            const user = currentUser();
+            if (user?.token) body.token = user.token;
+            const res = await fetch(FEE_NOIRE_CONFIG.GAS_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.code === 401) {
+                notify('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'error');
+                FeeNoireAuth.logout();
+                return data;
+            }
+            return data;
+        }
+
+        // =========================================================
+        //  KHỞI CHẠY (CHỈ DÙNG ĐĂNG NHẬP ĐỒNG BỘ GOOGLE SHEETS)
+        // =========================================================
+        function checkAuth() {
+            const session = sessionStorage.getItem('fee_noire_session');
+
+            if (!session) {
+                showNoAuth();
+                return;
+            }
+
+            try {
+                const user = JSON.parse(session);
+                if (user.role !== 'admin' && user.role !== 'staff') {
+                    showNoAuth();
+                    return;
+                }
+
+                // Hợp lệ → ẩn thông báo, hiện dashboard và load dữ liệu
+                document.getElementById('noAuthAlert').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                document.getElementById('statCardsRow').style.display = 'flex';
+
+                // Hiện nút thêm nhân viên & tab nếu là admin
+                if (user.role === 'admin') {
+                    document.getElementById('addStaffBtn').style.display = 'inline-flex';
+                    document.getElementById('adminTabs').style.display = 'flex';
+                } else {
+                    document.getElementById('addStaffBtn').style.display = 'none';
+                    document.getElementById('adminTabs').style.display = 'none';
+                }
+
+                // Hiện tên và role
+                document.getElementById('userGreeting').innerText = user.name;
+                document.getElementById('statRoleValue').innerText = user.role === 'admin' ? 'Admin' : 'Staff';
+                const badge = document.getElementById('userRoleBadge');
+                badge.innerText = user.role === 'admin' ? 'Admin' : 'Staff';
+                badge.className = 'badge ms-1 ' + (user.role === 'admin' ? 'bg-warning text-dark' : 'bg-info text-dark');
+
+                loadTable();
+
+            } catch (e) {
+                sessionStorage.removeItem('fee_noire_session');
+                showNoAuth();
+            }
+        }
+
+        function showNoAuth() {
+            document.getElementById('noAuthAlert').style.display = 'block';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('statCardsRow').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+        });
+
+        // =========================================================
+        //  BẢNG STAFF
+        // =========================================================
+        async function loadTable() {
+            document.getElementById('tableLoading').style.display = 'block';
+            document.getElementById('adminView').style.display = 'none';
+            document.getElementById('staffView').style.display = 'none';
+
+            try {
+                const data = await apiGet({ action: 'getStaff' });
+                if (data.status !== 'ok') throw new Error(data.message);
+
+                allStaff = data.staff;
+                updateStaffStats(allStaff);
+
+                if (currentUser().role === 'admin') {
+                    renderAdminTable(allStaff);
+                    if (currentAdminTab === 'price') loadPriceTable();
+                    if (currentAdminTab === 'story') loadStoryTab();
+                    if (currentAdminTab === 'music') loadMusic();
+                } else {
+                    renderStaffView(allStaff);
+                }
+            } catch (e) {
+                document.getElementById('tableLoading').innerHTML =
+                    '<p class="text-danger small">Không thể tải dữ liệu. <button class="btn btn-sm btn-outline-light ms-2" onclick="loadTable()">Thử lại</button></p>';
+            }
+        }
+
+        function updateStaffStats(staffList) {
+            document.getElementById('statStaffCount').innerText = staffList.length;
+            const totalLikes = staffList.reduce((sum, s) => sum + (Number(s.likes) || 0), 0);
+            document.getElementById('statLikesCount').innerText = totalLikes;
+        }
+
+        function categoryBadgeClass(cat) {
+            if (cat === 'uber') return 'badge-cat-uber';
+            if (cat === 'logacc') return 'badge-cat-logacc';
+            if (cat === 'host') return 'badge-cat-host';
+            if (cat === 'trực') return 'badge-cat-truc';
+            if (cat === 'artist') return 'badge-cat-artist';
+            return 'bg-secondary';
+        }
+
+        function renderAdminTable(staffList) {
+            const tbody = document.getElementById('adminStaffTableBody');
+            const keyword = (document.getElementById('staffSearchInput')?.value || '').toLowerCase().trim();
+
+            const filtered = keyword
+                ? staffList.filter(s => (s.name + s.category + s.zodiac).toLowerCase().includes(keyword))
+                : staffList;
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7">
+                    <div class="empty-state-box">
+                        <i class="fa-solid fa-user-slash"></i>
+                        <p class="mb-0">Không tìm thấy nhân viên nào phù hợp.</p>
+                    </div>
+                </td></tr>`;
+                document.getElementById('tableLoading').style.display = 'none';
+                document.getElementById('adminView').style.display = 'block';
+                return;
+            }
+
+            filtered.forEach(staff => {
+                tbody.innerHTML += `
+                <tr>
+                    <td><img src="${staff.img}" style="width:45px;height:55px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.15)" onerror="this.src='https://via.placeholder.com/45x55/161220/bb86fc?text=N/A'"></td>
+                    <td class="fw-bold text-white">${staff.name}</td>
+                    <td><span class="badge ${categoryBadgeClass(staff.category)} text-uppercase px-2 py-1" style="font-size:0.75rem;">${staff.category}</span></td>
+                    <td>${staff.zodiac}</td>
+                    <td class="small text-white-50">${staff.time}</td>
+                    <td class="text-end"><i class="fa-solid fa-heart text-danger me-1" style="font-size:0.8rem;"></i>${staff.likes || 0}</td>
+                    <td class="text-end">
+                        <button class="btn btn-outline-warning btn-sm rounded-pill px-2 me-1"
+                            onclick="openFeedbackModal('${staff.id}', '${staff.name}')"
+                            data-bs-toggle="modal" data-bs-target="#adminFeedbackModal">
+                            <i class="fa-regular fa-star"></i> Feedback
+                        </button>
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-2 me-1"
+                            onclick="openEditModal(${JSON.stringify(staff).replace(/"/g, '&quot;')})"
+                            data-bs-toggle="modal" data-bs-target="#staffModal">
+                            <i class="fa-solid fa-pen"></i> Sửa
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                            onclick="deleteStaff('${staff.id}', '${staff.name}')">
+                            <i class="fa-solid fa-trash"></i> Xóa
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            document.getElementById('tableLoading').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+        }
+
+        function renderStaffView(staffList) {
+            const grid = document.getElementById('staffCardGrid');
+            grid.innerHTML = '';
+
+            if (staffList.length === 0) {
+                grid.innerHTML = `<div class="col-12"><div class="empty-state-box">
+                    <i class="fa-solid fa-user-slash"></i><p class="mb-0">Chưa có dữ liệu nhân viên.</p>
+                </div></div>`;
+                document.getElementById('tableLoading').style.display = 'none';
+                document.getElementById('staffView').style.display = 'block';
+                return;
+            }
+
+            staffList.forEach(staff => {
+                const col = document.createElement('div');
+                col.className = 'col-sm-6 col-md-4';
+                col.innerHTML = `
+                <div class="skykid-card text-center p-3 cursor-pointer h-100"
+                     onclick="openFeedbackModal('${staff.id}', '${staff.name}')"
+                     data-bs-toggle="modal" data-bs-target="#adminFeedbackModal"
+                     style="cursor:pointer;">
+                    <div class="avatar-wrapper mx-auto mb-3" style="width:80px;height:100px;border-radius:8px;overflow:hidden;">
+                        <img src="${staff.img}" class="w-100 h-100" style="object-fit:cover;" onerror="this.src='https://via.placeholder.com/80x100/161220/bb86fc?text=N/A'">
+                    </div>
+                    <p class="text-white fw-bold mb-1" style="font-family:'Dancing Script',cursive;">${staff.name}</p>
+                    <span class="badge ${categoryBadgeClass(staff.category)} text-uppercase" style="font-size:0.7rem;">${staff.category}</span>
+                    <p class="text-white-50 small mt-2 mb-0"><i class="fa-regular fa-comment-dots me-1"></i> Xem & quản lý feedback</p>
+                </div>`;
+                grid.appendChild(col);
+            });
+
+            document.getElementById('tableLoading').style.display = 'none';
+            document.getElementById('staffView').style.display = 'block';
+        }
+
+        // =========================================================
+        //  THÊM / SỬA / XÓA STAFF
+        // =========================================================
+        function previewStaffImg() {
+            const url = document.getElementById('staffImg').value.trim();
+            const box = document.getElementById('staffImgPreviewBox');
+            if (!url) {
+                box.innerHTML = '<span class="placeholder-text">Nhập link ảnh để xem trước</span>';
+                return;
+            }
+            box.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='<span class=\\'placeholder-text\\'>Không tải được ảnh từ link này</span>'">`;
+        }
+
+        // Upload ảnh từ máy lên imgbb.com (cần IMGBB_API_KEY trong js/config.js)
+        // Lấy API key miễn phí tại: https://api.imgbb.com/
+        async function uploadStaffImgFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+
+            const statusBox = document.getElementById('staffImgUploadStatus');
+            const apiKey = window.FEE_NOIRE_CONFIG?.IMGBB_API_KEY;
+
+            if (!apiKey) {
+                statusBox.innerHTML = '<span class="text-danger">Chưa cấu hình IMGBB_API_KEY trong js/config.js — không thể upload ảnh.</span>';
+                return;
+            }
+
+            statusBox.innerHTML = '<span class="text-white-50"><span class="btn-spinner"></span>Đang upload ảnh lên imgbb...</span>';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('staffImg').value = data.data.url;
+                    previewStaffImg();
+                    statusBox.innerHTML = '<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Upload thành công!</span>';
+                } else {
+                    throw new Error(data.error?.message || 'Upload thất bại');
+                }
+            } catch (e) {
+                statusBox.innerHTML = `<span class="text-danger">Lỗi upload: ${e.message}</span>`;
+            }
+
+            input.value = ''; // reset input file để có thể chọn lại cùng file nếu cần
+        }
+
+        // Upload ảnh gallery từ máy lên imgbb
+        async function uploadGalleryImgFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            const statusBox = document.getElementById('galleryImgUploadStatus');
+            const apiKey = window.FEE_NOIRE_CONFIG?.IMGBB_API_KEY;
+            if (!apiKey) {
+                statusBox.innerHTML = '<span class="text-danger">Chưa cấu hình IMGBB_API_KEY.</span>';
+                return;
+            }
+            statusBox.innerHTML = '<span class="text-white-50"><span class="btn-spinner"></span>Đang upload...</span>';
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                const res  = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('galleryImgUrl').value = data.data.url;
+                    document.getElementById('galleryPreviewImg').src = data.data.url;
+                    document.getElementById('galleryPreviewBox').style.display = 'block';
+                    statusBox.innerHTML = '<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Upload thành công!</span>';
+                } else { throw new Error(data.error?.message || 'Upload thất bại'); }
+            } catch (e) {
+                statusBox.innerHTML = `<span class="text-danger">Lỗi: ${e.message}</span>`;
+            }
+            input.value = '';
+        }
+
+        function openAddModal() {
+            document.getElementById('staffModalLabel').innerText = 'Thêm Thẻ Nhân Viên Mới';
+            document.getElementById('staffForm').reset();
+            document.getElementById('editStaffId').value = '';
+            document.getElementById('staffImgPreviewBox').innerHTML = '<span class="placeholder-text">Nhập link ảnh để xem trước</span>';
+            document.getElementById('staffImgUploadStatus').innerHTML = '';
+        }
+
+        function openEditModal(staff) {
+            document.getElementById('staffModalLabel').innerText = 'Sửa Thông Tin Nhân Viên';
+            document.getElementById('editStaffId').value = staff.id;
+            document.getElementById('staffName').value = staff.name;
+            document.getElementById('staffCategory').value = staff.category;
+            document.getElementById('staffPosition').value = staff.position;
+            document.getElementById('staffZodiac').value = staff.zodiac;
+            document.getElementById('staffTime').value = staff.time;
+            document.getElementById('staffImg').value = staff.img;
+            document.getElementById('staffSlogan').value = staff.slogan;
+            document.getElementById('staffImgUploadStatus').innerHTML = '';
+            previewStaffImg();
+        }
+
+        async function saveStaff(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveStaffBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span>Đang lưu...';
+
+            const id = document.getElementById('editStaffId').value;
+            const body = {
+                action: id ? 'editStaff' : 'addStaff',
+                id,
+                name: document.getElementById('staffName').value,
+                category: document.getElementById('staffCategory').value,
+                position: document.getElementById('staffPosition').value,
+                zodiac: document.getElementById('staffZodiac').value,
+                time: document.getElementById('staffTime').value,
+                img: document.getElementById('staffImg').value,
+                slogan: document.getElementById('staffSlogan').value
+            };
+
+            const res = await apiPost(body);
+            if (res.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('staffModal')).hide();
+                notify(id ? 'Đã cập nhật thẻ nhân viên!' : 'Đã thêm thẻ nhân viên mới!', 'success');
+                loadTable();
+            } else {
+                notify('Lỗi: ' + res.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerText = 'Lưu Dữ Liệu';
+        }
+
+        async function deleteStaff(id, name) {
+            if (!confirm('Bạn có chắc muốn xóa thẻ nhân viên "' + name + '" không?')) return;
+            const res = await apiPost({ action: 'deleteStaff', id });
+            if (res.status === 'ok') {
+                notify('Đã xóa nhân viên "' + name + '".', 'success');
+                loadTable();
+            } else {
+                notify('Lỗi: ' + res.message, 'error');
+            }
+        }
+
+        // =========================================================
+        //  FEEDBACK MANAGEMENT (Staff + Admin)
+        // =========================================================
+        async function openFeedbackModal(staffId, staffName) {
+            activeStaffIdForFeedback = staffId;
+            document.getElementById('adminFeedbackTitle').innerText = 'Feedback của ' + staffName;
+            document.getElementById('adminFeedbackList').innerHTML =
+                '<div class="text-center text-white-50 small py-3"><div class="spinner-border spinner-border-sm me-2"></div>Đang tải...</div>';
+            await renderAdminFeedbacks();
+        }
+
+        async function renderAdminFeedbacks() {
+            const list = document.getElementById('adminFeedbackList');
+            try {
+                const data = await apiGet({ action: 'getFeedbacks', staffId: activeStaffIdForFeedback });
+                if (data.status !== 'ok') throw new Error();
+
+                if (data.feedbacks.length === 0) {
+                    list.innerHTML = `<div class="empty-state-box py-3">
+                        <i class="fa-regular fa-comment-dots" style="font-size:1.8rem;"></i>
+                        <p class="mb-0 small">Chưa có bình luận nào.</p>
+                    </div>`;
+                    return;
+                }
+
+                list.innerHTML = data.feedbacks.map(fb => `
+                <div class="feedback-item-text d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-star text-warning me-2"></i>${fb.content}</span>
+                    <i class="fa-solid fa-circle-xmark text-danger cursor-pointer ms-2"
+                       onclick="deleteFeedback('${fb.id}')" title="Xóa bình luận"></i>
+                </div>`).join('');
+            } catch (_) {
+                list.innerHTML = '<div class="text-white-50 text-center small my-3">Không thể tải bình luận.</div>';
+            }
+        }
+
+        async function deleteFeedback(feedbackId) {
+            if (!confirm('Xóa dòng bình luận này?')) return;
+            const res = await apiPost({ action: 'deleteFeedback', feedbackId });
+            if (res.status === 'ok') {
+                notify('Đã xóa bình luận.', 'success');
+                renderAdminFeedbacks();
+            } else {
+                notify('Lỗi: ' + res.message, 'error');
+            }
+        }
+
+        // =========================================================
+        //  CHUYỂN TAB QUẢN LÝ (Nhân Viên / Bảng Giá)
+        // =========================================================
+        function switchAdminTab(tab) {
+            currentAdminTab = tab;
+            const addBtn = document.getElementById('addStaffBtn');
+
+            document.querySelectorAll('#adminTabs .filter-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active',
+                    (idx === 0 && tab === 'staff') ||
+                    (idx === 1 && tab === 'price') ||
+                    (idx === 2 && tab === 'story') ||
+                    (idx === 3 && tab === 'music')
+                );
+            });
+
+            document.getElementById('adminStaffTabContent').style.display = tab === 'staff' ? 'block' : 'none';
+            document.getElementById('adminPriceTabContent').style.display = tab === 'price' ? 'block' : 'none';
+            document.getElementById('adminStoryTabContent').style.display = tab === 'story' ? 'block' : 'none';
+            document.getElementById('adminMusicTabContent').style.display = tab === 'music' ? 'block' : 'none';
+
+            if (tab === 'staff') {
+                addBtn.style.display = 'inline-flex';
+            } else {
+                addBtn.style.display = 'none';
+                if (tab === 'price') loadPriceTable();
+                if (tab === 'story') loadStoryTab();
+                if (tab === 'music') loadMusic();
+            }
+        }
+
+        // =========================================================
+        //  STORY SUB-TAB SWITCHER
+        // =========================================================
+        function switchStorySubTab(sub) {
+            currentStorySubTab = sub;
+            document.getElementById('storySubTabBtn').classList.toggle('active', sub === 'story');
+            document.getElementById('gallerySubTabBtn').classList.toggle('active', sub === 'gallery');
+            document.getElementById('storySubContent').style.display = sub === 'story' ? 'block' : 'none';
+            document.getElementById('gallerySubContent').style.display = sub === 'gallery' ? 'block' : 'none';
+        }
+
+        async function loadStoryTab() {
+            if (currentStorySubTab === 'story') await loadStories();
+            else await loadGallery();
+        }
+
+        // =========================================================
+        //  STORY CRUD
+        // =========================================================
+        async function loadStories() {
+            document.getElementById('storyListLoading').style.display = 'block';
+            document.getElementById('storyListAdmin').innerHTML = '';
+            try {
+                const data = await apiGet({ action: 'getStories' });
+                if (data.status !== 'ok') throw new Error(data.message);
+                allStories = data.stories;
+                renderStoryList(allStories);
+            } catch (e) {
+                document.getElementById('storyListAdmin').innerHTML =
+                    `<div class="col-12"><div class="empty-state-box"><i class="fa-solid fa-triangle-exclamation"></i><p>${e.message}</p><button class="btn btn-sm btn-outline-light" onclick="loadStories()">Thử lại</button></div></div>`;
+            }
+            document.getElementById('storyListLoading').style.display = 'none';
+        }
+
+        function renderStoryList(list) {
+            const container = document.getElementById('storyListAdmin');
+            if (!list.length) {
+                container.innerHTML = '<div class="col-12"><div class="empty-state-box"><i class="fa-solid fa-book-open"></i><p>Chưa có bài viết nào.</p></div></div>';
+                return;
+            }
+            container.innerHTML = list.map(s => `
+                <div class="col-12">
+                    <div class="skykid-card p-3 d-flex gap-3 align-items-start">
+                        ${s.cover ? `<img src="${s.cover}" style="width:90px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);">` : ''}
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div>
+                                    <h6 class="text-white mb-1 fw-bold">${s.title}</h6>
+                                    <span class="badge bg-secondary text-uppercase" style="font-size:0.7rem;">${s.tag || 'Chung'}</span>
+                                    <span class="text-white-50 small ms-2">${new Date(s.createdAt).toLocaleDateString('vi-VN')}</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-info btn-sm rounded-pill px-2"
+                                        onclick="openEditStoryModal(${JSON.stringify(s).replace(/"/g, '&quot;')})"
+                                        data-bs-toggle="modal" data-bs-target="#storyModal">
+                                        <i class="fa-solid fa-pen"></i> Sửa
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                                        onclick="deleteStory('${s.id}')">
+                                        <i class="fa-solid fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-white-50 small mt-2 mb-0" style="line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                ${s.content}
+                            </p>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function openAddStoryModal() {
+            document.getElementById('storyModalLabel').innerHTML = '<i class="fa-solid fa-book-open me-2 text-warning"></i>Thêm Bài Viết Mới';
+            document.getElementById('storyForm').reset();
+            document.getElementById('editStoryId').value = '';
+        }
+
+        function openEditStoryModal(s) {
+            document.getElementById('storyModalLabel').innerHTML = '<i class="fa-solid fa-book-open me-2 text-warning"></i>Sửa Bài Viết';
+            document.getElementById('editStoryId').value = s.id;
+            document.getElementById('storyTitle').value = s.title;
+            document.getElementById('storyCover').value = s.cover || '';
+            document.getElementById('storyTag').value = s.tag || '';
+            document.getElementById('storyContent').value = s.content;
+        }
+
+        async function saveStory(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveStoryBtn');
+            btn.disabled = true; btn.innerText = 'Đang lưu...';
+            const id = document.getElementById('editStoryId').value;
+            const res = await apiPost({
+                action: id ? 'editStory' : 'addStory',
+                id, title: document.getElementById('storyTitle').value,
+                cover: document.getElementById('storyCover').value,
+                tag: document.getElementById('storyTag').value,
+                content: document.getElementById('storyContent').value
+            });
+            if (res.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('storyModal')).hide();
+                notify(id ? 'Đã cập nhật bài viết!' : 'Đã thêm bài viết mới!', 'success');
+                loadStories();
+            } else { notify('Lỗi: ' + res.message, 'error'); }
+            btn.disabled = false; btn.innerText = 'Lưu Bài Viết';
+        }
+
+        async function deleteStory(id) {
+            if (!confirm('Xóa bài viết này?')) return;
+            const res = await apiPost({ action: 'deleteStory', id });
+            if (res.status === 'ok') { notify('Đã xóa bài viết.', 'success'); loadStories(); }
+            else notify('Lỗi: ' + res.message, 'error');
+        }
+
+        // =========================================================
+        //  GALLERY CRUD
+        // =========================================================
+        async function loadGallery() {
+            document.getElementById('galleryListLoading').style.display = 'block';
+            document.getElementById('galleryListAdmin').innerHTML = '';
+            try {
+                const data = await apiGet({ action: 'getGallery' });
+                if (data.status !== 'ok') throw new Error(data.message);
+                allGallery = data.gallery;
+                renderGalleryList(allGallery);
+            } catch (e) {
+                document.getElementById('galleryListAdmin').innerHTML =
+                    `<div class="col-12"><div class="empty-state-box"><i class="fa-solid fa-triangle-exclamation"></i><p>${e.message}</p><button class="btn btn-sm btn-outline-light" onclick="loadGallery()">Thử lại</button></div></div>`;
+            }
+            document.getElementById('galleryListLoading').style.display = 'none';
+        }
+
+        function renderGalleryList(list) {
+            const container = document.getElementById('galleryListAdmin');
+            if (!list.length) {
+                container.innerHTML = '<div class="col-12"><div class="empty-state-box"><i class="fa-solid fa-images"></i><p>Chưa có ảnh nào.</p></div></div>';
+                return;
+            }
+            container.innerHTML = list.map(g => `
+                <div class="col-6 col-md-3">
+                    <div class="skykid-card p-2 text-center" style="position:relative;">
+                        <img src="${g.img}" alt="${g.caption || ''}"
+                            style="width:100%;height:130px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
+                        ${g.caption ? `<p class="text-white-50 small mt-2 mb-1" style="font-size:0.78rem;">${g.caption}</p>` : ''}
+                        ${g.tag ? `<span class="badge bg-secondary" style="font-size:0.65rem;">${g.tag}</span>` : ''}
+                        <div class="d-flex justify-content-center gap-2 mt-2">
+                            <button class="btn btn-outline-info btn-sm rounded-pill px-2"
+                                onclick="openEditGalleryModal(${JSON.stringify(g).replace(/"/g, '&quot;')})"
+                                data-bs-toggle="modal" data-bs-target="#galleryModal">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                                onclick="deleteGalleryItem('${g.id}')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function openAddGalleryModal() {
+            document.getElementById('galleryModalLabel').innerHTML = '<i class="fa-solid fa-image me-2 text-warning"></i>Thêm Ảnh Mới';
+            document.getElementById('galleryForm').reset();
+            document.getElementById('editGalleryId').value = '';
+            document.getElementById('galleryImgUrl').value = '';
+            document.getElementById('galleryImgUploadStatus').innerHTML = '';
+            document.getElementById('galleryPreviewBox').style.display = 'none';
+            document.getElementById('galleryPreviewImg').src = '';
+        }
+
+        function openEditGalleryModal(g) {
+            document.getElementById('galleryModalLabel').innerHTML = '<i class="fa-solid fa-image me-2 text-warning"></i>Sửa Ảnh';
+            document.getElementById('editGalleryId').value = g.id;
+            document.getElementById('galleryImgUrl').value = g.img;
+            document.getElementById('galleryCaption').value = g.caption || '';
+            document.getElementById('galleryTag').value = g.tag || '';
+            document.getElementById('galleryImgUploadStatus').innerHTML =
+                '<span class="text-white-50 small"><i class="fa-solid fa-circle-info me-1"></i>Upload ảnh mới nếu muốn thay đổi</span>';
+            document.getElementById('galleryPreviewImg').src = g.img;
+            document.getElementById('galleryPreviewBox').style.display = 'block';
+        }
+
+        // Preview ảnh được xử lý bởi uploadGalleryImgFile()
+
+        async function saveGallery(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveGalleryBtn');
+            btn.disabled = true; btn.innerText = 'Đang lưu...';
+            const id = document.getElementById('editGalleryId').value;
+            const res = await apiPost({
+                action: id ? 'editGallery' : 'addGallery',
+                id, img: document.getElementById('galleryImgUrl').value,
+                caption: document.getElementById('galleryCaption').value,
+                tag: document.getElementById('galleryTag').value
+            });
+            if (res.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('galleryModal')).hide();
+                notify(id ? 'Đã cập nhật ảnh!' : 'Đã thêm ảnh mới!', 'success');
+                loadGallery();
+            } else { notify('Lỗi: ' + res.message, 'error'); }
+            btn.disabled = false; btn.innerText = 'Lưu Ảnh';
+        }
+
+        async function deleteGalleryItem(id) {
+            if (!confirm('Xóa ảnh này?')) return;
+            const res = await apiPost({ action: 'deleteGallery', id });
+            if (res.status === 'ok') { notify('Đã xóa ảnh.', 'success'); loadGallery(); }
+            else notify('Lỗi: ' + res.message, 'error');
+        }
+
+        // =========================================================
+        //  NHẠC NỀN — Quản lý playlist từ IndexedDB (đồng bộ với music-player.js)
+        // =========================================================
+        const MUSIC_DB_NAME = 'fn_music_db';
+        const MUSIC_STORE = 'tracks';
+
+        function openMusicDB() {
+            return new Promise((res, rej) => {
+                const req = indexedDB.open(MUSIC_DB_NAME, 1);
+                req.onupgradeneeded = e => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(MUSIC_STORE))
+                        db.createObjectStore(MUSIC_STORE, { keyPath: 'id', autoIncrement: true });
+                };
+                req.onsuccess = e => res(e.target.result);
+                req.onerror = e => rej(e.target.error);
+            });
+        }
+
+        async function loadMusic() {
+            const container = document.getElementById('musicListAdmin');
+            container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm" style="color:var(--accent-glow);"></div></div>';
+            try {
+                const db = await openMusicDB();
+                const tracks = await new Promise((res, rej) => {
+                    const req = db.transaction(MUSIC_STORE, 'readonly').objectStore(MUSIC_STORE).getAll();
+                    req.onsuccess = e => res(e.target.result || []);
+                    req.onerror = e => rej(e.target.error);
+                });
+                renderMusicList(tracks);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state-box"><i class="fa-solid fa-triangle-exclamation"></i><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderMusicList(tracks) {
+            const container = document.getElementById('musicListAdmin');
+            if (!tracks.length) {
+                container.innerHTML = '<div class="empty-state-box"><i class="fa-solid fa-music"></i><p>Chưa có bài nhạc nào. Upload file MP3 để bắt đầu!</p></div>';
+                return;
+            }
+            container.innerHTML = tracks.map((t, idx) => `
+                <div class="skykid-card p-3 d-flex align-items-center gap-3">
+                    <span class="badge bg-secondary" style="min-width:28px;">${idx + 1}</span>
+                    <i class="fa-solid fa-music" style="color:var(--accent-glow);font-size:0.9rem;flex-shrink:0;"></i>
+                    <div class="flex-grow-1" style="overflow:hidden;">
+                        <div class="text-white fw-bold" style="font-size:0.92rem;">${escHtml(t.title)}</div>
+                        <div class="text-white-50 small">${formatBytes(t.blob?.size || 0)}</div>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-2" onclick="deleteMusicItem(${t.id})" title="Xóa">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>`).join('');
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function deleteMusicItem(id) {
+            if (!confirm('Xóa bài nhạc này?')) return;
+            try {
+                const db = await openMusicDB();
+                await new Promise((res, rej) => {
+                    const req = db.transaction(MUSIC_STORE, 'readwrite').objectStore(MUSIC_STORE).delete(id);
+                    req.onsuccess = () => res();
+                    req.onerror = e => rej(e.target.error);
+                });
+                notify('Đã xóa bài nhạc.', 'success');
+                loadMusic();
+                // Thông báo cho music-player.js cập nhật lại danh sách
+                window.dispatchEvent(new Event('fn:musicLibraryChanged'));
+            } catch (e) {
+                notify('Lỗi: ' + e.message, 'error');
+            }
+        }
+
+        // Upload MP3 từ tab Admin
+        document.getElementById('adminMusicUpload')?.addEventListener('change', async function () {
+            const files = Array.from(this.files).filter(f => f.type.startsWith('audio/'));
+            if (!files.length) return;
+            try {
+                const db = await openMusicDB();
+                for (const file of files) {
+                    await new Promise((res, rej) => {
+                        const req = db.transaction(MUSIC_STORE, 'readwrite').objectStore(MUSIC_STORE)
+                            .put({ title: file.name.replace(/\.[^.]+$/, ''), blob: file });
+                        req.onsuccess = () => res();
+                        req.onerror = e => rej(e.target.error);
+                    });
+                }
+                notify(`Đã thêm ${files.length} bài nhạc.`, 'success');
+                this.value = '';
+                loadMusic();
+                window.dispatchEvent(new Event('fn:musicLibraryChanged'));
+            } catch (e) {
+                notify('Lỗi upload: ' + e.message, 'error');
+            }
+        });
+
+        // =========================================================
+        //  BẢNG GIÁ — KẾT NỐI THẬT GOOGLE SHEETS (sheet "Prices")
+        // =========================================================
+        async function loadPriceTable() {
+            const tbody = document.getElementById('adminPriceTableBody');
+            tbody.innerHTML = `<tr><td colspan="6">
+                <div class="text-center text-white-50 small py-3">
+                    <div class="spinner-border spinner-border-sm me-2"></div>Đang tải dữ liệu bảng giá...
+                </div>
+            </td></tr>`;
+
+            try {
+                const data = await apiGet({ action: 'getPrices' });
+                if (data.status !== 'ok') throw new Error(data.message);
+
+                allPrices = data.prices;
+                document.getElementById('statPriceCount').innerText = allPrices.length;
+                renderAdminPriceTable(allPrices);
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5">
+                    <div class="empty-state-box">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <p class="mb-2">Không thể tải dữ liệu bảng giá.</p>
+                        <p class="small mb-2">${e.message || ''}</p>
+                        <button class="btn btn-sm btn-outline-light" onclick="loadPriceTable()">Thử lại</button>
+                    </div>
+                </td></tr>`;
+            }
+        }
+
+        function renderAdminPriceTable(priceList) {
+            const tbody = document.getElementById('adminPriceTableBody');
+            const keyword = (document.getElementById('priceSearchInput')?.value || '').toLowerCase().trim();
+
+            const filtered = keyword
+                ? priceList.filter(p => (p.name + p.category + (p.subtype || '')).toLowerCase().includes(keyword))
+                : priceList;
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6">
+                    <div class="empty-state-box">
+                        <i class="fa-solid fa-tags"></i>
+                        <p class="mb-0">Chưa có gói dịch vụ nào. Nhấn "Thêm Gói Dịch Vụ Mới" để bắt đầu.</p>
+                    </div>
+                </td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const subtypeLabel = item.subtype ? ` <span class="text-white-50">- ${item.subtype}</span>` : '';
+                const timCell = item.price_tim
+                    ? `<span class="text-danger fw-bold">❤️ ${item.price_tim}</span>`
+                    : `<span class="text-white-50 small">—</span>`;
+                const vndCell = item.price_vnd
+                    ? `<span class="text-warning fw-bold">💵 ${item.price_vnd}</span>`
+                    : `<span class="text-white-50 small">—</span>`;
+                tbody.innerHTML += `
+            <tr>
+                <td class="fw-bold text-white">${item.name}</td>
+                <td><span class="badge ${categoryBadgeClass(item.category)} text-uppercase" style="font-size:0.75rem;">${item.category}</span>${subtypeLabel}</td>
+                <td>${timCell}</td>
+                <td>${vndCell}</td>
+                <td class="small text-white-50 text-wrap" style="max-width: 260px;">${item.desc || ''}</td>
+                <td class="text-end">
+                    <button class="btn btn-outline-info btn-sm rounded-pill px-2 me-1" onclick='openEditPriceModal(${JSON.stringify(item)})'>
+                        <i class="fa-solid fa-pen"></i> Sửa
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-2" onclick="deletePrice('${item.id}', '${item.name.replace(/'/g, "\\'")}')">
+                        <i class="fa-solid fa-trash"></i> Xóa
+                    </button>
+                </td>
+            </tr>`;
+            });
+        }
+
+        function openAddPriceModal() {
+            document.getElementById('priceModalLabel').innerText = 'Thêm Gói Dịch Vụ Mới';
+            document.getElementById('priceForm').reset();
+            document.getElementById('editPriceId').value = '';
+        }
+
+        function openEditPriceModal(item) {
+            document.getElementById('priceModalLabel').innerText = 'Sửa Gói Dịch Vụ';
+            document.getElementById('editPriceId').value = item.id;
+            document.getElementById('priceName').value = item.name;
+            document.getElementById('priceCategory').value = item.category;
+            document.getElementById('priceSubtype').value = item.subtype || '';
+            document.getElementById('priceTim').value = item.price_tim || '';
+            document.getElementById('priceVnd').value = item.price_vnd || '';
+            document.getElementById('priceDesc').value = item.desc || '';
+            new bootstrap.Modal(document.getElementById('priceModal')).show();
+        }
+
+        async function savePrice(e) {
+            e.preventDefault();
+            const btn = document.getElementById('savePriceBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span>Đang lưu...';
+
+            const id = document.getElementById('editPriceId').value;
+            const body = {
+                action: id ? 'editPrice' : 'addPrice',
+                id,
+                name: document.getElementById('priceName').value,
+                category: document.getElementById('priceCategory').value,
+                subtype: document.getElementById('priceSubtype').value,
+                price_tim: document.getElementById('priceTim').value,
+                price_vnd: document.getElementById('priceVnd').value,
+                desc: document.getElementById('priceDesc').value
+            };
+
+            const res = await apiPost(body);
+            if (res.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('priceModal')).hide();
+                notify(id ? 'Đã cập nhật gói dịch vụ!' : 'Đã thêm gói dịch vụ mới!', 'success');
+                loadPriceTable();
+            } else {
+                notify('Lỗi: ' + res.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerText = 'Lưu Dữ Liệu';
+        }
+
+        async function deletePrice(id, name) {
+            if (!confirm('Bạn có chắc muốn xóa dịch vụ "' + name + '" không?')) return;
+            const res = await apiPost({ action: 'deletePrice', id });
+            if (res.status === 'ok') {
+                notify('Đã xóa dịch vụ "' + name + '".', 'success');
+                loadPriceTable();
+            } else {
+                notify('Lỗi: ' + res.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
