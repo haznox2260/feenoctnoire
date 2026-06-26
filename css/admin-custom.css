@@ -250,3 +250,52 @@
     box-shadow: 0 0 8px rgba(187, 134, 252, 0.4) !important;
     background-color: rgba(7, 8, 12, 0.9) !important;
 }
+
+/* ==========================================================================
+   NÚT AUTH TÁCH RIÊNG KHỎI .nav-links — LUÔN HIỆN TRÊN MỌI THIẾT BỊ
+   ========================================================================== */
+.fn-auth-btn {
+    /* Tách khỏi nav-links nên dùng margin trực tiếp */
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Desktop: giữ khoảng cách nhỏ với nav */
+@media (min-width: 769px) {
+    .fn-auth-btn {
+        margin-left: 12px;
+    }
+    /* Đảm bảo header vẫn layout đúng */
+    header.navbar {
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* Mobile: nút nằm giữa logo và hamburger (hamburger do auth.js inject vào) */
+@media (max-width: 768px) {
+    header.navbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    /* Logo chiếm phần còn lại, đẩy btn auth và hamburger sang phải */
+    header.navbar .logo {
+        flex: 1;
+    }
+    .fn-auth-btn {
+        font-size: 0.78rem;
+        padding: 6px 12px !important;
+        margin-left: 0;
+        /* Ẩn chữ, chỉ giữ icon → gọn hơn trên màn nhỏ */
+    }
+    /* Ẩn chữ "Đăng Nhập" / tên user, chỉ hiện icon để không bị tràn */
+    .fn-auth-btn #navUserText {
+        display: none;
+    }
+    .fn-auth-btn i {
+        margin-right: 0 !important;
+        font-size: 1rem;
+    }
+}
