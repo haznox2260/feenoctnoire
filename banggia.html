@@ -197,27 +197,27 @@
         </div>
     </footer>
 
-    <!-- Modal QR Thanh Toán -->
+    <!-- Modal QR Donate -->
     <div class="modal fade" id="qrPayModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content glass-modal-content text-center">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title text-white w-100"
                         style="font-family:'Dancing Script',cursive;font-size:1.6rem;letter-spacing:1px;">
-                        <i class="fa-solid fa-qrcode text-warning me-2"></i>Thanh Toán Fée Noire
+                        <i class="fa-solid fa-qrcode text-warning me-2"></i>Donate Fée Noire
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                         style="filter:invert(1);position:absolute;right:18px;top:18px;"></button>
                 </div>
                 <div class="modal-body pt-3 pb-4 px-4">
-                    <p class="text-white-50 small mb-3">Quét mã QR để chuyển khoản thanh toán dịch vụ</p>
+                    <p class="text-white-50 small mb-3">Quét mã QR để chuyển khoản Donate dịch vụ</p>
 
                     <!-- ĐẶT ẢNH QR CỦA BẠN VÀO ĐÂY -->
                     <div
                         style="background:white;border-radius:16px;padding:16px;display:inline-block;box-shadow:0 0 30px rgba(187,134,252,0.25);">
                         <img id="qrPayImg"
                             src="images/thanhtoan.jpg"
-                            alt="QR Thanh Toán Fée Noire"
+                            alt="QR Donate Fée Noire"
                             style="width:220px;height:220px;display:block;border-radius:8px;">
                     </div>
 
@@ -279,7 +279,7 @@
                         <li><span class="text-white fw-bold">PAGE NHẬN LOGACC NOCAPE</span></li>
                         <li>Fée Noire sẽ hủy đơn nếu trước giờ hẹn <span class="text-white fw-bold">2 tiếng</span> vẫn chưa có staff nhận nha</li>
                         <li>Bbi hãy đặt đơn trước <span class="text-white fw-bold">2 tiếng</span> nếu không phải đơn gấp nhé</li>
-                        <li>Fée Noire chỉ nhận thanh toán bằng <span class="text-white fw-bold">TIỀN</span> với những
+                        <li>Fée Noire chỉ nhận Donate bằng <span class="text-white fw-bold">TIỀN</span> với những
                             gấp dưới 2 tiếng ˙ᵕ˙</li>
                         <li>Đơn Host nếu không ghi rõ giờ, đơn sẽ được mặc định là đơn <span
                                 class="text-white fw-bold">1 tiếng</span>.</li>
@@ -360,7 +360,7 @@
             backdrop-filter:blur(16px);
             -webkit-backdrop-filter:blur(16px);
             transition:all 0.25s ease;
-        " title="Xem QR Thanh Toán"
+        " title="Xem QR Donate"
         onmouseenter="this.style.transform='scale(1.12)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.4),0 0 28px rgba(187,134,252,0.35)'"
         onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.4),0 0 18px rgba(187,134,252,0.15)'">
         <i class="fa-solid fa-qrcode"></i>
@@ -433,7 +433,7 @@
 
         /* Tooltip label nổi lên trên nút QR */
         #btnQRPay::before {
-            content: 'Thanh Toán';
+            content: 'Donate';
             position: absolute;
             right: 68px;
             white-space: nowrap;
